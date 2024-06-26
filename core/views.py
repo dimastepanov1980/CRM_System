@@ -11,6 +11,7 @@ from django.http import JsonResponse
 class ClientListView(ListView):
     model = Client
     template_name = 'core/client_list.html'
+    context_object_name = 'clients'
 
 class HomePageView(TemplateView):
     template_name = 'core/home.html'
@@ -71,28 +72,24 @@ class MessageListView(ListView):
     context_object_name = 'messages'    
     
 @csrf_exempt
-def webhook(request):
+def receive_message(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        # Обработка данных от Telegram
-        print(data)
+        bot_token = data.get('bot_token')
+        message_text = data.get('message_text')
+        message_date = data.get('timestamp')
 
-        bot_token = data['message']['from']['id']
-        message_text = data['message']['text']
-        message_date = data['message']['date']
-
-        # Получаем объект бота по токену
-        bot = Bot.objects.get(token=bot_token)
-        
-        # Сохраняем сообщение в базу данных
-        Message.objects.create(
-            bot=bot,
-            text=message_text,
-            timestamp=message_date,
-            tags='',
-            category=''
-        )
-
-        return JsonResponse({'status': 'ok'})
+        try:
+            bot = Bot.objects.get(token=bot_token)
+            Message.objects.create(
+                bot=bot,
+                text=message_text,
+                timestamp=message_date,
+                tags='',
+                category=''
+            )
+            return JsonResponse({'status': 'ok'})
+        except Bot.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Bot not found'}, status=404)
     else:
         return JsonResponse({'status': 'bad request'}, status=400)

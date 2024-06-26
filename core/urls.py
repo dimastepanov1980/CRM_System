@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import ClientListView, ClientDetailView, HomePageView, ClientCreateView, AdminCreateView, BotCreateView, MessageListView, webhook
+from .views import ClientListView, ClientDetailView, HomePageView, ClientCreateView, AdminCreateView, BotCreateView, MessageListView, receive_message
 
 urlpatterns = [
     path('', HomePageView.as_view(), name='home'),  # Маршрут для основной страницы
@@ -9,5 +9,6 @@ urlpatterns = [
     path('admins/add/', AdminCreateView.as_view(), name='admin-add'),
     path('bots/add/', BotCreateView.as_view(), name='bot-add'),
     path('messages/', MessageListView.as_view(), name='message-list'),
-    path('webhook/', webhook, name='webhook'),
+    path('receive_message/', receive_message, name='receive_message'),
+
 ]

@@ -79,29 +79,29 @@ class MessageListView(ListView):
     
     
 @csrf_exempt
-def webhook(request):
+def receive_message(request):
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            user_id = data.get('user_id', 'unknown_user')  # Установите значение по умолчанию для user_id
-            message_text = data.get('message', '')
-            message_type = data.get('message_type', 'default_type')  # Установите значение по умолчанию для message_type
-            bot_id = data['bot_id']  # Сохранение идентификатора бота
+        data = json.loads(request.body)
+        # Обработка данных от Telegram
+        print(data)
 
-            logging.info(f"Received message: {message_text}, message_type: {message_type}, user_id: {user_id}")
+        bot_token = data['message']['from']['id']
+        message_text = data['message']['text']
+        message_date = data['message']['date']
 
-            # Создайте новый объект Message с полученными данными
-            Message.objects.create(
-                user_id=user_id,
-                text=message_text,
-                message_type=message_type,
-                bot_id=bot_id
-            )
+        # Получаем объект бота по токену
+        bot = Bot.objects.get(token=bot_token)
+        
+        # Сохраняем сообщение в базу данных
+        Message.objects.create(
+            bot=bot,
+            text=message_text,
+            timestamp=message_date,
+            tags='',
+            category=''
+        )
 
-            return JsonResponse({'status': 'ok'})
-        except Exception as e:
-            logging.error(f"Error processing webhook: {str(e)}")
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        return JsonResponse({'status': 'ok'})
     else:
         return JsonResponse({'status': 'bad request'}, status=400)
     

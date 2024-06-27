@@ -81,27 +81,14 @@ class MessageListView(ListView):
 @csrf_exempt
 def receive_message(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        # Обработка данных от Telegram
-        print(data)
-
-        bot_token = data['message']['from']['id']
-        message_text = data['message']['text']
-        message_date = data['message']['date']
-
-        # Получаем объект бота по токену
-        bot = Bot.objects.get(token=bot_token)
+        data = json.loads(request.body.decode('utf-8'))
+        user_id = data.get('user_id')
+        text = data.get('message')
+        message_type = data.get('type')
         
-        # Сохраняем сообщение в базу данных
-        Message.objects.create(
-            bot=bot,
-            text=message_text,
-            timestamp=message_date,
-            tags='',
-            category=''
-        )
-
-        return JsonResponse({'status': 'ok'})
-    else:
-        return JsonResponse({'status': 'bad request'}, status=400)
-    
+        # Сохранение сообщения в базу данных
+        message = Message(user_id=user_id, text=text, message_type=message_type)
+        message.save()
+        
+        return JsonResponse({"status": "success"})
+    return JsonResponse({"status": "invalid method"}, status=400)

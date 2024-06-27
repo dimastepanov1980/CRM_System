@@ -72,19 +72,21 @@ class MessageListView(ListView):
     context_object_name = 'messages'    
     
 @csrf_exempt
-def receive_message(request):
+def webhook(request):
     if request.method == 'POST':
         try:
-            data = json.loads(request.body.decode('utf-8'))
-            user_id = data.get('user_id')
-            text = data.get('message')
-            message_type = data.get('type')
-            
-            # Сохранение сообщения в базу данных
-            message = Message(user_id=user_id, text=text, message_type=message_type)
-            message.save()
-            
-            return JsonResponse({"status": "success"})
+            data = json.loads(request.body)
+            message_text = data.get('message', '')
+            message_type = data.get('message_type', 'default_type')  # Установите значение по умолчанию для message_type
+
+            # Создайте новый объект Message с полученными данными
+            Message.objects.create(
+                message=message_text,
+                message_type=message_type
+            )
+
+            return JsonResponse({'status': 'ok'})
         except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)}, status=500)
-    return JsonResponse({"status": "invalid method"}, status=400)
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    else:
+        return JsonResponse({'status': 'bad request'}, status=400)

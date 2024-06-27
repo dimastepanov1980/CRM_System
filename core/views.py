@@ -74,14 +74,17 @@ class MessageListView(ListView):
 @csrf_exempt
 def receive_message(request):
     if request.method == 'POST':
-        data = json.loads(request.body.decode('utf-8'))
-        user_id = data.get('user_id')
-        text = data.get('message')
-        message_type = data.get('type')
-        
-        # Сохранение сообщения в базу данных
-        message = Message(user_id=user_id, text=text, message_type=message_type)
-        message.save()
-        
-        return JsonResponse({"status": "success"})
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            user_id = data.get('user_id')
+            text = data.get('message')
+            message_type = data.get('type')
+            
+            # Сохранение сообщения в базу данных
+            message = Message(user_id=user_id, text=text, message_type=message_type)
+            message.save()
+            
+            return JsonResponse({"status": "success"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
     return JsonResponse({"status": "invalid method"}, status=400)

@@ -78,12 +78,16 @@ def webhook(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            user_id = data.get('user_id', 'unknown_user')  # Установите значение по умолчанию для user_id
             message_text = data.get('message', '')
             message_type = data.get('message_type', 'default_type')  # Установите значение по умолчанию для message_type
 
+            logging.info(f"Received message: {message_text}, message_type: {message_type}, user_id: {user_id}")
+
             # Создайте новый объект Message с полученными данными
             Message.objects.create(
-                message=message_text,
+                user_id=user_id,
+                text=message_text,
                 message_type=message_type
             )
 

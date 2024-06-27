@@ -7,7 +7,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         if not User.objects.filter(username="dima").exists():
             User.objects.create_superuser(
-                username="dimastepanov1980",
+                username="dima",
                 email="dimastepanov1980@gmail.com",
                 password="Qwaqaq_123"
             )

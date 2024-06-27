@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, View
 from django.views.generic import TemplateView
 from django.views.decorators.csrf import csrf_exempt
-from .models import Client, Message, Bot
+from .models import Client, Message
 from .forms import ClientForm, AdminForm, BotForm
 from django.http import JsonResponse
 

@@ -66,11 +66,7 @@ class Bot(models.Model):
         return self.name
 
 class Message(models.Model):
-    bot = models.ForeignKey(Bot, on_delete=models.CASCADE)
+    user_id = models.CharField(max_length=255)
     text = models.TextField()
-    timestamp = models.DateTimeField(auto_now_add=True)
-    tags = models.CharField(max_length=200)
-    category = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.text
+    message_type = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)

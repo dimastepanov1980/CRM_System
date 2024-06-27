@@ -6,6 +6,8 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Client, Message
 from .forms import ClientForm, AdminForm, BotForm
 from django.http import JsonResponse
+import logging
+
 
 
 class ClientListView(ListView):
@@ -87,6 +89,7 @@ def webhook(request):
 
             return JsonResponse({'status': 'ok'})
         except Exception as e:
+            logging.error(f"Error processing webhook: {str(e)}")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     else:
         return JsonResponse({'status': 'bad request'}, status=400)

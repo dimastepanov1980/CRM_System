@@ -62,7 +62,7 @@ WSGI_APPLICATION = 'crm_system.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.config(default='postgres://user:password@localhost/dbname')
+    'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
 }
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'

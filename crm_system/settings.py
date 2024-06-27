@@ -20,12 +20,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+<<<<<<< HEAD
 SECRET_KEY = 'django-insecure-+fakwn=yei3^72470#@((a97jgp*$ax6qcz%9ih^#h%_&)sade'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
+=======
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your_secret_key')
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
+
+
+ALLOWED_HOSTS = ['*']
+>>>>>>> 52c0a8cc (Initial commit)
 
 
 # Application definition
@@ -75,6 +85,15 @@ WSGI_APPLICATION = 'crm_system.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
+<<<<<<< HEAD
+=======
+    'default': dj_database_url.config(default='postgres://user:password@localhost/dbname')
+}
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+"""
+DATABASES = {
+>>>>>>> 52c0a8cc (Initial commit)
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'crm_db',
@@ -84,6 +103,10 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+<<<<<<< HEAD
+=======
+"""
+>>>>>>> 52c0a8cc (Initial commit)
 
 
 # Password validation

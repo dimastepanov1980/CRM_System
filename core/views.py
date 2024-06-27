@@ -74,22 +74,14 @@ class MessageListView(ListView):
 @csrf_exempt
 def receive_message(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        bot_token = data.get('bot_token')
-        message_text = data.get('message_text')
-        message_date = data.get('timestamp')
-
-        try:
-            bot = Bot.objects.get(token=bot_token)
-            Message.objects.create(
-                bot=bot,
-                text=message_text,
-                timestamp=message_date,
-                tags='',
-                category=''
-            )
-            return JsonResponse({'status': 'ok'})
-        except Bot.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Bot not found'}, status=404)
-    else:
-        return JsonResponse({'status': 'bad request'}, status=400)
+        data = json.loads(request.body.decode('utf-8'))
+        user_id = data.get('user_id')
+        text = data.get('message')
+        message_type = data.get('type')
+        
+        # Сохранение сообщения в базу данных
+        message = Message(user_id=user_id, text=text, message_type=message_type)
+        message.save()
+        
+        return JsonResponse({"status": "success"})
+    return JsonResponse({"status": "invalid method"}, status=400)

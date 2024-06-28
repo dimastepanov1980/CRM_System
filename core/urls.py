@@ -10,4 +10,5 @@ urlpatterns = [
     path('bots/add/', BotCreateView.as_view(), name='bot-add'),
     path('webhook/', webhook, name='webhook'),
     path('messages/<str:bot_id>/', MessageListView.as_view(), name='message_list'),
+
 ]

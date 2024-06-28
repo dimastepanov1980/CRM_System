@@ -55,9 +55,22 @@ WSGI_APPLICATION = 'crm_system.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
+"""
 DATABASES = {
-    'default': dj_database_url.config(default='postgres://dimastepanov:Qwaqaq_123@localhost:5432/dimastepanov_db?sslmode=disable')
+  'default': dj_database_url.config(
+        default='postgres://dimastepanov:Qwaqaq_123@localhost:5432/dima_db?sslmode=disable'
+    )
+}
+"""
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'dima_db',
+        'USER': 'dimastepanov',
+        'PASSWORD': 'Qwaqaq_123',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
 }
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'

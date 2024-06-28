@@ -77,6 +77,7 @@ class MessageListView(ListView):
         bot_id = self.kwargs.get('bot_id')
         return Message.objects.filter(bot_id=bot_id)  
     
+    
 @csrf_exempt
 def webhook(request):
     if request.method == 'POST':
@@ -85,8 +86,7 @@ def webhook(request):
             user_id = data.get('user_id', 'unknown_user')  # Установите значение по умолчанию для user_id
             message_text = data.get('message', '')
             message_type = data.get('message_type', 'default_type')  # Установите значение по умолчанию для message_type
-            bot_id=data['bot_id']  # Сохранение идентификатора бота
-
+            bot_id = data['bot_id']  # Сохранение идентификатора бота
 
             logging.info(f"Received message: {message_text}, message_type: {message_type}, user_id: {user_id}")
 

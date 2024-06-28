@@ -70,4 +70,7 @@ class Message(models.Model):
     text = models.TextField()
     message_type = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
-    bot_id = models.CharField(max_length=255)  # Новое поле для идентификатора бота
+    bot_id = models.CharField(max_length=255, default='default_bot_id')  # Значение по умолчанию
+    
+    def __str__(self):
+        return self.text

@@ -70,7 +70,6 @@ class Message(models.Model):
     text = models.TextField()
     message_type = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
-    bot_id = models.CharField(max_length=255, default='default_bot_id')  # Значение по умолчанию
-    
+    bot_id = models.CharField(max_length=255, default='default_bot_id')  # Добавляем новое поле    
     def __str__(self):
         return self.text

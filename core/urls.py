@@ -9,5 +9,5 @@ urlpatterns = [
     path('admins/add/', AdminCreateView.as_view(), name='admin-add'),
     path('bots/add/', BotCreateView.as_view(), name='bot-add'),
     path('webhook/', webhook, name='webhook'),
-    path('messages/', MessageListView.as_view(), name='message-list'),
+    path('messages/<str:bot_id>/', MessageListView.as_view(), name='message_list'),
 ]

@@ -71,7 +71,11 @@ class BotCreateView(View):
 class MessageListView(ListView):
     model = Message
     template_name = 'core/message_list.html'
-    context_object_name = 'messages'    
+    context_object_name = 'messages'
+    
+    def get_queryset(self):
+        bot_id = self.kwargs.get('bot_id')
+        return Message.objects.filter(bot_id=bot_id)  
     
 @csrf_exempt
 def webhook(request):
@@ -81,6 +85,8 @@ def webhook(request):
             user_id = data.get('user_id', 'unknown_user')  # Установите значение по умолчанию для user_id
             message_text = data.get('message', '')
             message_type = data.get('message_type', 'default_type')  # Установите значение по умолчанию для message_type
+            bot_id=data['bot_id']  # Сохранение идентификатора бота
+
 
             logging.info(f"Received message: {message_text}, message_type: {message_type}, user_id: {user_id}")
 
@@ -88,7 +94,8 @@ def webhook(request):
             Message.objects.create(
                 user_id=user_id,
                 text=message_text,
-                message_type=message_type
+                message_type=message_type,
+                bot_id=bot_id
             )
 
             return JsonResponse({'status': 'ok'})

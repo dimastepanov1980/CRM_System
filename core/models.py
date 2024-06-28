@@ -70,3 +70,4 @@ class Message(models.Model):
     text = models.TextField()
     message_type = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
+    bot_id = models.CharField(max_length=255)  # Новое поле для идентификатора бота

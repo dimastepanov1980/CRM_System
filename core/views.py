@@ -104,3 +104,4 @@ def webhook(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     else:
         return JsonResponse({'status': 'bad request'}, status=400)
+    

@@ -2,6 +2,9 @@ import dj_database_url
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+import logging
+import dj_database_url
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -10,13 +13,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
+logging.basicConfig(level=logging.DEBUG)
+
 DEBUG = os.getenv('DJANGO_DEBUG', '') != 'False'
+logging.debug(f'DEBUG: {DEBUG}')
+
+if not DEBUG:
+    ALLOWED_HOSTS = ['bike-crm-7f78192cffc8.herokuapp.com']
+else:
+    ALLOWED_HOSTS = ['*']
+logging.debug(f'ALLOWED_HOSTS: {ALLOWED_HOSTS}')
 
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get('DATABASE_URL')
     )
 }
+logging.debug(f'DATABASES: {DATABASES}')
 
 if DEBUG:
     ALLOWED_HOSTS = ['*']

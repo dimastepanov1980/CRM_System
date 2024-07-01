@@ -21,7 +21,7 @@ DATABASES = {
 if DEBUG:
     ALLOWED_HOSTS = ['*']
 else:
-    ALLOWED_HOSTS = ['bike-crm-7f78192cffc8.herokuapp.com']
+    ALLOWED_HOSTS = ['https://bike-crm-7f78192cffc8.herokuapp.com', 'https://herokuapp.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',

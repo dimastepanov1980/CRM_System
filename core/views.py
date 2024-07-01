@@ -4,7 +4,7 @@ from django.views.generic import ListView, DetailView, View, TemplateView
 from django.views.decorators.csrf import csrf_exempt
 from .models import Client, Message
 from .forms import ClientForm, AdminForm, BotForm
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 import logging
 
 class ClientListView(ListView):

@@ -1,29 +1,22 @@
 import json
 from django.shortcuts import render, redirect
-from django.views.generic import ListView, DetailView, View
-from django.views.generic import TemplateView
+from django.views.generic import ListView, DetailView, View, TemplateView
 from django.views.decorators.csrf import csrf_exempt
 from .models import Client, Message
 from .forms import ClientForm, AdminForm, BotForm
 from django.http import JsonResponse, HttpResponse
 import logging
 
-
-
-
 class ClientListView(ListView):
     model = Client
     template_name = 'core/client_list.html'
     context_object_name = 'clients'
 
-def test_view(request):
-    return HttpResponse("It works!")
-
 class HomePageView(TemplateView):
     template_name = 'core/home.html'
-    
-    def home(request):
-        return render(request, 'home.html')
+
+    # Удалите это определение метода home отсюда, если вы используете TemplateView.
+    # Если вам все еще нужно это представление, определите его как функцию вне класса.
 
 class ClientDetailView(DetailView):
     model = Client
@@ -43,7 +36,7 @@ class ClientCreateView(View):
             form.save()
             return redirect('client-list')
         return render(request, self.template_name, {'form': form})
-    
+
 class AdminCreateView(View):
     form_class = AdminForm
     template_name = 'core/admin_form.html'
@@ -57,8 +50,7 @@ class AdminCreateView(View):
         if form.is_valid():
             form.save()
             return redirect('admin-list')
-        return render(request, self.template_name, {'form': form})    
-
+        return render(request, self.template_name, {'form': form})
 
 class BotCreateView(View):
     form_class = BotForm
@@ -78,8 +70,8 @@ class BotCreateView(View):
 class MessageListView(ListView):
     model = Message
     template_name = 'core/message_list.html'
-    context_object_name = 'messages'    
-    
+    context_object_name = 'messages'
+
 @csrf_exempt
 def webhook(request):
     if request.method == 'POST':

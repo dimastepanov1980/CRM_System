@@ -80,6 +80,7 @@ def webhook(request):
             user_id = data.get('user_id', 'unknown_user')  # Установите значение по умолчанию для user_id
             message_text = data.get('message', '')
             message_type = data.get('message_type', 'default_type')  # Установите значение по умолчанию для message_type
+            bot_id = data.get('bot_id', 'default_bot_id')
 
             logging.info(f"Received message: {message_text}, message_type: {message_type}, user_id: {user_id}")
 
@@ -87,7 +88,8 @@ def webhook(request):
             Message.objects.create(
                 user_id=user_id,
                 text=message_text,
-                message_type=message_type
+                message_type=message_type,
+                bot_id=bot_id
             )
 
             return JsonResponse({'status': 'ok'})

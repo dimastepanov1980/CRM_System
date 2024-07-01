@@ -5,8 +5,9 @@ from django.views.generic import TemplateView
 from django.views.decorators.csrf import csrf_exempt
 from .models import Client, Message
 from .forms import ClientForm, AdminForm, BotForm
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 import logging
+
 
 
 
@@ -15,8 +16,14 @@ class ClientListView(ListView):
     template_name = 'core/client_list.html'
     context_object_name = 'clients'
 
+def test_view(request):
+    return HttpResponse("It works!")
+
 class HomePageView(TemplateView):
     template_name = 'core/home.html'
+    
+    def home(request):
+        return render(request, 'home.html')
 
 class ClientDetailView(DetailView):
     model = Client

@@ -57,7 +57,7 @@ WSGI_APPLICATION = 'crm_system.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-"""
+
 
 DATABASES = {
     'default': dj_database_url.config(
@@ -75,7 +75,7 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-
+"""
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',

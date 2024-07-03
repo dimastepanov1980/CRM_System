@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Message List</title>
+    <title>Bot Detail</title>
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <h1>Message List</h1>
+    <h1>{{ bot.name }}</h1>
     <ul>
-        {% for message in messages %}
-            <li>{{ message.created_at }} - {{ message.text }}</li>
-        {% endfor %}
-    </ul>
-    <a href="{% url 'bot-detail' bot_id %}">Back to Bot Detail</a>
+        {% for client in bot.client_set.all %}
+        <li><a href="{% url 'message-list' bot.pk client.user_id %}">{{ client.name }}</a></li>
+    {% endfor %}
+</ul>
+<a href="{% url 'bot-list' %}">Back to Bot List</a>
 </body>
 </html>

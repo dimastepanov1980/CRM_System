@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group, Permission
 
 class MasterAdminManager(BaseUserManager):
     def create_user(self, email, password=None):
@@ -17,11 +17,14 @@ class MasterAdminManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-class MasterAdmin(AbstractBaseUser):
+class MasterAdmin(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
+    last_login = models.DateTimeField(null=True, blank=True)
+    groups = models.ManyToManyField(Group, related_name='masteradmin_groups', blank=True)
+    user_permissions = models.ManyToManyField(Permission, related_name='masteradmin_permissions', blank=True)
     objects = MasterAdminManager()
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -48,11 +51,28 @@ class Client(models.Model):
     def __str__(self):
         return self.name
 
-class Admin(models.Model):
+class AdminManager(BaseUserManager):
+    def create_user(self, email, password=None):
+        if not email:
+            raise ValueError("The Email field must be set")
+        email = self.normalize_email(email)
+        user = self.model(email=email)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+class Admin(AbstractBaseUser, PermissionsMixin):
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
+    name = models.CharField(max_length=100)
     password = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=True)
+    last_login = models.DateTimeField(null=True, blank=True)
+    groups = models.ManyToManyField(Group, related_name='admin_groups', blank=True)
+    user_permissions = models.ManyToManyField(Permission, related_name='admin_permissions', blank=True)
+    objects = AdminManager()
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
 
     def __str__(self):
         return self.name
@@ -69,7 +89,7 @@ class Message(models.Model):
     user_id = models.CharField(max_length=255)
     text = models.TextField()
     message_type = models.CharField(max_length=50)
-    bot_id = models.CharField(max_length=255, default='default_bot_id')
+    bot = models.ForeignKey(Bot, on_delete=models.CASCADE, default='default_bot_id')
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):

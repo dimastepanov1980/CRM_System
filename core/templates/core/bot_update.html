@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Message List</title>
+    <title>Edit Bot</title>
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <h1>Message List</h1>
-    <ul>
-        {% for message in messages %}
-            <li>{{ message.created_at }} - {{ message.text }}</li>
-        {% endfor %}
-    </ul>
-    <a href="{% url 'bot-detail' bot_id %}">Back to Bot Detail</a>
+    <h1>Edit Bot</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save Changes</button>
+    </form>
+    <a href="{% url 'bot-detail' bot.pk %}">Back to Bot Detail</a>
 </body>
 </html>

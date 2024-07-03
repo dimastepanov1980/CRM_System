@@ -9,12 +9,21 @@
 </head>
 <body>
     <h1>Client List</h1>
-    <ul>
-        {% for client in object_list %}
-            <li>
-                <a href="{% url 'client-detail' client.id %}">{{ client.name }}</a>
-            </li>
-        {% endfor %}
-    </ul>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for client in clients %}
+            <tr>
+                <td>{{ client.name }}</td>
+                <td>{{ client.email }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>

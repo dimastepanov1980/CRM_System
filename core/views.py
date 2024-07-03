@@ -1,95 +1,87 @@
-import json
 from django.shortcuts import render, redirect
-from django.views.generic import ListView, DetailView, View, TemplateView
-from django.views.decorators.csrf import csrf_exempt
-from .models import Client, Message
-from .forms import ClientForm, AdminForm, BotForm
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.utils.decorators import method_decorator
+from django.contrib.auth.hashers import check_password
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.views import LoginView, LogoutView
+from django.views.generic import ListView, CreateView
+from django.views import View
+from .models import Bot, Message, Client, Admin
+from .forms import BotForm, LoginForm
+import json
 import logging
 
-class ClientListView(ListView):
-    model = Client
-    template_name = 'core/client_list.html'
-    context_object_name = 'clients'
 
-class HomePageView(TemplateView):
-    template_name = 'core/home.html'
+logger = logging.getLogger(__name__)
 
-    # Удалите это определение метода home отсюда, если вы используете TemplateView.
-    # Если вам все еще нужно это представление, определите его как функцию вне класса.
 
-class ClientDetailView(DetailView):
-    model = Client
-    template_name = 'core/client_detail.html'
+def authenticate_admin(email, password):
+    try:
+        admin = Admin.objects.get(email=email)
+        if check_password(password, admin.password):
+            return admin
+        else:
+            return None
+    except Admin.DoesNotExist:
+        return None
 
-class ClientCreateView(View):
-    form_class = ClientForm
-    template_name = 'core/client_form.html'
+def logout_view(request):
+    logout(request)
+    return redirect('/login/')
 
-    def get(self, request):
-        form = self.form_class()
-        return render(request, self.template_name, {'form': form})
-
-    def post(self, request):
-        form = self.form_class(request.POST)
+def login_view(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('client-list')
-        return render(request, self.template_name, {'form': form})
+            email = form.cleaned_data.get('email')
+            password = form.cleaned_data.get('password')
+            user = authenticate(request, username=email, password=password)
+            logger.info(f"Attempting login for user: {user}")
+            if user is not None:
+                login(request, user)
+                return redirect('bot-list')
+            else:
+                logger.warning(f"Login failed for user: {user}")
+                return render(request, 'core/login.html', {'form': form, 'error': 'Invalid email or password'})
+    else:
+        form = LoginForm()
+    return render(request, 'core/login.html', {'form': form})
 
-class AdminCreateView(View):
-    form_class = AdminForm
-    template_name = 'core/admin_form.html'
+@method_decorator(login_required, name='dispatch')
+class BotListView(ListView):
+    model = Bot
+    template_name = 'core/bot_list.html'
+    context_object_name = 'bots'
 
-    def get(self, request):
-        form = self.form_class()
-        return render(request, self.template_name, {'form': form})
+    def get_queryset(self):
+        return Bot.objects.filter(client__admin=self.request.user)
 
-    def post(self, request):
-        form = self.form_class(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('admin-list')
-        return render(request, self.template_name, {'form': form})
-
-class BotCreateView(View):
+class BotCreateView(CreateView):
+    model = Bot
     form_class = BotForm
     template_name = 'core/bot_form.html'
-
-    def get(self, request):
-        form = self.form_class()
-        return render(request, self.template_name, {'form': form})
-
-    def post(self, request):
-        form = self.form_class(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('bot-list')
-        return render(request, self.template_name, {'form': form})
-
-class MessageListView(ListView):
-    model = Message
-    template_name = 'core/message_list.html'
-    context_object_name = 'messages'
+    success_url = '/bots/'
 
 @csrf_exempt
 def webhook(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            user_id = data.get('user_id', 'unknown_user')  # Установите значение по умолчанию для user_id
+            user_id = data.get('user_id', 'unknown_user')
             message_text = data.get('message', '')
-            message_type = data.get('message_type', 'default_type')  # Установите значение по умолчанию для message_type
+            message_type = data.get('message_type', 'default_type')
             bot_id = data.get('bot_id', 'default_bot_id')
+            bot = Bot.objects.get(id=bot_id)
 
             logging.info(f"Received message: {message_text}, message_type: {message_type}, user_id: {user_id}")
 
-            # Создайте новый объект Message с полученными данными
             Message.objects.create(
                 user_id=user_id,
                 text=message_text,
                 message_type=message_type,
-                bot_id=bot_id
+                bot=bot
             )
 
             return JsonResponse({'status': 'ok'})
@@ -98,3 +90,34 @@ def webhook(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     else:
         return JsonResponse({'status': 'bad request'}, status=400)
+
+
+"""
+@csrf_exempt
+def webhook(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user_id = data.get('user_id', 'unknown_user')
+            message_text = data.get('message', '')
+            message_type = data.get('message_type', 'default_type')
+            bot_id = data.get('bot_id', 'default_bot_id')
+            bot = Bot.objects.get(id=bot_id)
+
+            logging.info(f"Received message: {message_text}, message_type: {message_type}, user_id: {user_id}")
+
+            Message.objects.create(
+                user_id=user_id,
+                text=message_text,
+                message_type=message_type,
+                bot=bot
+            )
+
+            return JsonResponse({'status': 'ok'})
+        except Exception as e:
+            logging.error(f"Error processing webhook: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    else:
+        return JsonResponse({'status': 'bad request'}, status=400)
+    
+"""

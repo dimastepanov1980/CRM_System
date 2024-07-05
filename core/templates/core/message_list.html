@@ -1,20 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Message List</title>
-    {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
-</head>
-<body>
-    <h1>Message List</h1>
-    <ul>
-        {% for message in messages %}
-            <li>
-                <strong>{{ message.timestamp }}</strong>: {{ message.text }}
-            </li>
-        {% endfor %}
-    </ul>
-</body>
-</html>
+{% extends "core/base.html" %}
+
+{% block content %}
+  <h1>Messages for User {{ user_id }}</h1>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>
+          <a href="?sort={% if sort == 'asc' %}desc{% else %}asc{% endif %}">Time</a>
+        </th>
+        <th>Message</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for message in messages %}
+      <tr>
+        <td>{{ message.created_at }}</td>
+        <td>{{ message.text }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  
+  <a href="{% url 'user_list' bot_id %}" class="btn btn-secondary">Back</a>
+{% endblock %}

@@ -16,7 +16,7 @@ class UserAdmin(BaseUserAdmin):
             'fields': ('email', 'name', 'password1', 'password2', 'is_admin', 'is_master_admin'),
         }),
     )
-    list_display = ('email', 'name', 'is_admin', 'is_master_admin', 'is_staff', 'is_active')
+    list_display = ('email', 'name', 'is_admin', 'is_master_admin', 'is_staff', 'is_active', 'date_joined')
     search_fields = ('email', 'name')
     ordering = ('email',)
     filter_horizontal = ('groups', 'user_permissions')

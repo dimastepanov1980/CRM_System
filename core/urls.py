@@ -2,6 +2,7 @@ from django.urls import path
 from .views import login_view, bot_list_view, logout_view, BotCreateView, BotUpdateView, BotDetailView, message_list_view, user_list_view, message_list_view, webhook, AdminCreateView, AdminListView, AdminUpdateView
 
 urlpatterns = [
+    path('', login_view, name='login'),
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
     path('bots/', bot_list_view, name='bot_list'),

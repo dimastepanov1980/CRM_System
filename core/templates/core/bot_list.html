@@ -1,13 +1,18 @@
 {% extends "core/base.html" %}
 
 {% block content %}
-  <h2>List of Bots</h2>
-  <ul>
-    {% for bot in bots %}
-      <li>
-        {{ bot.name }} - <a href="{% url 'user_list' bot.id %}">View Users</a>
-      </li>
-    {% endfor %}
-  </ul>
-  <a href="{% url 'logout' %}">Logout</a>
+<div class="container mt-5">
+    <h2 class="text-center mb-4">List of Bots</h2>
+    <ul class="list-group">
+        {% for bot in bots %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ bot.name }}
+                <a href="{% url 'user_list' bot.id %}" class="btn btn-primary btn-sm">View Users</a>
+            </li>
+        {% endfor %}
+    </ul>
+    <div class="mt-3">
+        <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
+    </div>
+</div>
 {% endblock %}

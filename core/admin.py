@@ -5,20 +5,21 @@ from django import forms
 
 class UserAdmin(BaseUserAdmin):
     fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name', 'email')}),
-        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
-        ('Important dates', {'fields': ('last_login',)}),
+        (None, {'fields': ('email', 'password')}),
+        ('Personal info', {'fields': ('name',)}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions', 'is_admin', 'is_master_admin')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'password1', 'password2'),
+            'fields': ('email', 'password1', 'password2'),
         }),
     )
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff')
-    search_fields = ('username', 'first_name', 'last_name', 'email')
-    ordering = ('username',)
+    list_display = ('email', 'name', 'is_staff')
+    search_fields = ('email', 'name')
+    ordering = ('email',)
+    readonly_fields = ('date_joined',)
 
 class BotForm(forms.ModelForm):
     class Meta:

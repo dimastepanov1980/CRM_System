@@ -9,6 +9,7 @@ async def send_to_crm(data, bot_identifier: int):
     crm_url = "http://127.0.0.1:8000/webhook/"  # Добавлен http://
     if not crm_url:
         logging.info(f"CRM URL is empty. Data to send: {data}")
+        
         return
 
     # Логирование отправляемых данных

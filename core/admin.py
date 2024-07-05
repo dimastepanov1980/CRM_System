@@ -5,21 +5,20 @@ from django import forms
 
 class UserAdmin(BaseUserAdmin):
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
-        ('Personal info', {'fields': ('name',)}),
-        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'is_admin', 'is_master_admin', 'groups', 'user_permissions')}),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+        (None, {'fields': ('username', 'password')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'email')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Important dates', {'fields': ('last_login',)}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'name', 'password1', 'password2', 'is_admin', 'is_master_admin'),
+            'fields': ('username', 'password1', 'password2'),
         }),
     )
-    list_display = ('email', 'name', 'is_admin', 'is_master_admin', 'is_staff', 'is_active', 'date_joined')
-    search_fields = ('email', 'name')
-    ordering = ('email',)
-    filter_horizontal = ('groups', 'user_permissions')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff')
+    search_fields = ('username', 'first_name', 'last_name', 'email')
+    ordering = ('username',)
 
 class BotForm(forms.ModelForm):
     class Meta:

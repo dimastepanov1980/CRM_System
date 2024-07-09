@@ -16,12 +16,14 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 logging.basicConfig(level=logging.DEBUG)
 
 DEBUG = os.getenv('DJANGO_DEBUG', '') == 'False'
+
 logging.debug(f'DEBUG: {DEBUG}')
 
 if not DEBUG:
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1','chatflow.bot']
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1','chatflow.bot', 'www.chatflow.bot']
 else:
     ALLOWED_HOSTS = ['*']
+
 logging.debug(f'ALLOWED_HOSTS: {ALLOWED_HOSTS}')
 
 DATABASES = {

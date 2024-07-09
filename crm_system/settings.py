@@ -15,11 +15,11 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 logging.basicConfig(level=logging.DEBUG)
 
-DEBUG = os.getenv('DJANGO_DEBUG', '') != 'False'
+DEBUG = os.getenv('DJANGO_DEBUG', '') == 'False'
 logging.debug(f'DEBUG: {DEBUG}')
 
 if not DEBUG:
-    ALLOWED_HOSTS = ['bike-crm-7f78192cffc8.herokuapp.com']
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1','chatflow.bot']
 else:
     ALLOWED_HOSTS = ['*']
 logging.debug(f'ALLOWED_HOSTS: {ALLOWED_HOSTS}')

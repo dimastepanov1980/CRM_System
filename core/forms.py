@@ -24,3 +24,11 @@ class AdminForm(forms.ModelForm):
         widgets = {
             'password': forms.PasswordInput(),
         }
+
+class LoginForm(AuthenticationForm):
+    username = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'shadow form-control', 'placeholder': 'Username'})
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'shadow form-control', 'placeholder': 'Password'})
+    )        

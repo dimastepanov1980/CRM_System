@@ -15,9 +15,12 @@ from django.db.models import Max
 
 logging.basicConfig(level=logging.INFO)
 
+def home(request):
+    return render(request, 'core/home.html')
+
 def login_view(request):
     if request.method == 'POST':
-        form = LoginForm(data=request.POST)
+        form = LoginForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
             login(request, user)

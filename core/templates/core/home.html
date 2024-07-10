@@ -15,12 +15,12 @@
         <div class="container"><a class="navbar-brand d-flex align-items-center" href="/"><span>chatflow</span></a><button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-1"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
             <div class="collapse navbar-collapse" id="navcol-1">
                 <ul class="navbar-nav mx-auto">
-                    <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="features.html">Features</a></li>
-                    <li class="nav-item"><a class="nav-link" href="integrations.html">Integrations</a></li>
-                    <li class="nav-item"><a class="nav-link" href="pricing.html">Pricing</a></li>
-                    <li class="nav-item"><a class="nav-link" href="contacts.html">Contacts</a></li>
-                </ul><a class="btn btn-primary shadow" role="button" href="login">Sign up</a>
+                    <li class="nav-item"><a class="nav-link active" href="#home">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#integration">Integrations</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#demo">Demo</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#price">Pricing</a></li>
+                </ul><a class="btn btn-primary shadow" role="button" href="login">Sign In</a>
             </div>
         </div>
     </nav>
@@ -32,8 +32,11 @@
                         <h1 class="display-4 fw-bold mb-5" style="padding-left: 0px;margin-left: 0px;">From Talking to&nbsp;Growing,&nbsp;<span class="underline">together</span>.</h1>
                         <p class="fs-5 text-muted mb-5">Focus on Growth your business, AI Assistant will Handle the Chats.</p>
                         <form class="d-flex justify-content-center flex-wrap" method="post">
-                            <div class="shadow-lg mb-3"><input class="form-control" type="email" name="email" placeholder="Your Email"></div>
-                            <div class="shadow-lg mb-3"><button class="btn btn-primary" type="submit">Subscribe </button></div>
+                            <div class="shadow-lg mb-3"></div>
+                            <div class="shadow-lg mb-3"><a class="btn btn-primary" role="button" href="https://t.me/chatflow_support"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-brand-telegram" style="font-size: 24px;padding-right: 0px;margin-right: 5px;">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4"></path>
+                                    </svg>Contact Us</a></div>
                         </form>
                     </div>
                 </div>
@@ -44,7 +47,7 @@
         </div>
     </header>
     <section>
-        <div class="container py-4 py-xl-5">
+        <div class="container py-4 py-xl-5" id="features">
             <div class="row gy-4 row-cols-1 row-cols-md-2 row-cols-lg-3">
                 <div class="col">
                     <div class="card border-light border-1 d-flex justify-content-center p-4">
@@ -159,13 +162,13 @@
                     </div>
                 </div>
                 <div class="col-md-6 order-first order-md-last">
-                    <div><img class="rounded img-fluid w-100 fit-cover" style="min-height: 300px;" src="{% static 'assets/img/illustrations/startup.svg' %}"></div>
+                    <div><img class="rounded img-fluid w-100 fit-cover" style="min-height: 300px;"  src="{% static 'assets/img/illustrations/startup.svg' %}"></div>
                 </div>
             </div>
         </div>
     </section>
     <section>
-        <div class="container py-4 py-xl-5">
+        <div class="container py-4 py-xl-5" id="integration">
             <div class="row gy-4 gy-md-0">
                 <div class="col-md-6 text-center text-md-start d-flex d-sm-flex d-md-flex justify-content-center align-items-center justify-content-md-start align-items-md-center justify-content-xl-center">
                     <div><img class="rounded img-fluid fit-cover" style="min-height: 300px;" src="{% static 'assets/img/illustrations/presentation.svg' %}" width="800"></div>
@@ -180,14 +183,17 @@
         </div>
     </section>
     <section class="py-4 py-xl-5">
-        <div class="container">
+        <div class="container" id="demo">
             <div class="bg-primary border rounded border-0 border-primary overflow-hidden">
                 <div class="row g-0">
                     <div class="col-md-6 d-flex flex-column justify-content-center">
                         <div class="text-white p-4 p-md-5">
                             <h2 class="fw-bold text-white mb-3">Try the Demo: Motorcycle Booking AI Assistant</h2>
                             <p class="mb-4">Experience our AI Assistant for booking motorcycles. It manages interactions, schedules bookings, and sends reminders, seamlessly integrating with your existing systems to save you time and enhance customer satisfaction.</p>
-                            <div class="my-3"><a class="btn btn-warning me-2 mt-2" role="button" href="#">Telegram</a><a class="btn btn-light mt-2" role="button" href="#">Google Sheet</a></div>
+                            <div class="my-3"><a class="btn btn-warning me-2 mt-2" role="button" href="https://t.me/chatflow_support"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-brand-telegram" style="font-size: 24px;padding-right: 0px;margin-right: 5px;">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4"></path>
+                                    </svg>Telegram</a><a class="btn btn-light mt-2" role="button" href="https://docs.google.com/spreadsheets/d/1DbDvZZZcOzOTy5IAd5Wr7rv8iwwS8aII3d6yMkdOZL8/edit?usp=sharing">Google Sheet</a></div>
                         </div>
                     </div>
                     <div class="col-md-6 order-first order-md-last" style="min-height: 250px;"><img class="w-100 h-100 fit-contain pt-5 pt-md-0" src="{% static 'assets/img/illustrations/web-development.svg' %}"></div>
@@ -196,11 +202,11 @@
         </div>
     </section>
     <section class="py-5">
-        <div class="container py-4 py-xl-5">
+        <div class="container py-4 py-xl-5" id="price">
             <div class="row mb-5">
                 <div class="col-md-8 col-xl-6 text-center mx-auto">
                     <h2 class="display-6 fw-bold mb-4">Check out<br>our <span class="underline">amazing plans</span></h2>
-                    <p class="text-muted">Curae hendrerit donec commodo hendrerit egestas tempus, turpis facilisis nostra nunc. Vestibulum dui eget ultrices.</p>
+                    <p class="text-muted">Special offer for Motorbike and Cars Rental shop!</p>
                 </div>
             </div>
             <div class="row gy-4 row-cols-1 row-cols-md-2 row-cols-lg-3">
@@ -208,23 +214,27 @@
                     <div class="card border-0 h-100">
                         <div class="card-body d-flex flex-column justify-content-between p-4">
                             <div>
-                                <h6 class="fw-bold text-muted">Standard</h6>
-                                <h4 class="display-5 fw-bold mb-4">$15</h4>
+                                <h6 class="fw-bold text-muted">Monthly</h6>
+                                <h4 class="display-5 fw-bold mb-4">$35</h4>
                                 <ul class="list-unstyled">
                                     <li class="d-flex mb-2"><span class="bs-icon-xs bs-icon-rounded bs-icon me-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-check fs-5 text-primary">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                                 <path d="M5 12l5 5l10 -10"></path>
-                                            </svg></span><span>Lectus ut nibh quam, felis porttitor.</span></li>
+                                            </svg></span><span>One Bot setup</span></li>
                                     <li class="d-flex mb-2"><span class="bs-icon-xs bs-icon-rounded bs-icon me-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-check fs-5 text-primary">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                                 <path d="M5 12l5 5l10 -10"></path>
-                                            </svg></span><span>Ante nec venenatis etiam lacinia.</span></li>
+                                            </svg></span><span>Message management</span></li>
                                     <li class="d-flex mb-2"><span class="bs-icon-xs bs-icon-rounded bs-icon me-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-check fs-5 text-primary">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                                 <path d="M5 12l5 5l10 -10"></path>
-                                            </svg></span><span>Porta suscipit netus ad ac.</span></li>
+                                            </svg></span><span>Booking management</span></li>
+                                    <li class="d-flex mb-2"><span class="bs-icon-xs bs-icon-rounded bs-icon me-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-check fs-5 text-primary">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M5 12l5 5l10 -10"></path>
+                                            </svg></span><span>Monthly updates</span></li>
                                 </ul>
-                            </div><a class="btn btn-primary" role="button" href="#">Button</a>
+                            </div><a class="btn btn-primary" role="button" href="https://t.me/chatflow_support">Request</a>
                         </div>
                     </div>
                 </div>
@@ -232,23 +242,27 @@
                     <div class="card border-warning border-2 h-100">
                         <div class="card-body d-flex flex-column justify-content-between p-4"><span class="badge bg-warning position-absolute top-0 end-0 rounded-bottom-left text-uppercase text-primary">Most Popular</span>
                             <div>
-                                <h6 class="fw-bold text-muted">Pro</h6>
-                                <h4 class="display-5 fw-bold mb-4">$38</h4>
+                                <h6 class="fw-bold text-muted">6 Months/per month</h6>
+                                <h4 class="display-5 fw-bold mb-4">$150/<strong>$</strong>25</h4>
                                 <ul class="list-unstyled">
                                     <li class="d-flex mb-2"><span class="bs-icon-xs bs-icon-rounded bs-icon me-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-check fs-5 text-primary">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                                 <path d="M5 12l5 5l10 -10"></path>
-                                            </svg></span><span>Lectus ut nibh quam, felis porttitor.</span></li>
+                                            </svg></span><span>One Bot setup</span></li>
                                     <li class="d-flex mb-2"><span class="bs-icon-xs bs-icon-rounded bs-icon me-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-check fs-5 text-primary">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                                 <path d="M5 12l5 5l10 -10"></path>
-                                            </svg></span><span>Ante nec venenatis etiam lacinia.</span></li>
+                                            </svg></span><span>&nbsp;Message management</span></li>
                                     <li class="d-flex mb-2"><span class="bs-icon-xs bs-icon-rounded bs-icon me-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-check fs-5 text-primary">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                                 <path d="M5 12l5 5l10 -10"></path>
-                                            </svg></span><span>Porta suscipit netus ad ac.</span></li>
+                                            </svg></span><span>Booking management</span></li>
+                                    <li class="d-flex mb-2"><span class="bs-icon-xs bs-icon-rounded bs-icon me-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-check fs-5 text-primary">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M5 12l5 5l10 -10"></path>
+                                            </svg></span><span>Priority support</span></li>
                                 </ul>
-                            </div><a class="btn btn-warning" role="button" href="#">Button</a>
+                            </div><a class="btn btn-warning" role="button" href="https://t.me/chatflow_support"><span style="color: var(--bs-btn-hover-color); background-color: var(--bs-btn-hover-bg);">Request</span></a>
                         </div>
                     </div>
                 </div>
@@ -256,27 +270,27 @@
                     <div class="card border-0 h-100">
                         <div class="card-body d-flex flex-column justify-content-between p-4">
                             <div class="pb-4">
-                                <h6 class="fw-bold text-muted">Enterprise</h6>
-                                <h4 class="display-5 fw-bold mb-4">$70</h4>
+                                <h6 class="fw-bold text-muted">Yearly<strong>/per month</strong></h6>
+                                <h4 class="display-5 fw-bold mb-4">$240/<strong>$</strong>20</h4>
                                 <ul class="list-unstyled">
                                     <li class="d-flex mb-2"><span class="bs-icon-xs bs-icon-rounded bs-icon me-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-check fs-5 text-primary">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                                 <path d="M5 12l5 5l10 -10"></path>
-                                            </svg></span><span>Lectus ut nibh quam, felis porttitor.</span></li>
+                                            </svg></span><span>One Bot setup</span></li>
                                     <li class="d-flex mb-2"><span class="bs-icon-xs bs-icon-rounded bs-icon me-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-check fs-5 text-primary">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                                 <path d="M5 12l5 5l10 -10"></path>
-                                            </svg></span><span>Ante nec venenatis etiam lacinia.</span></li>
+                                            </svg></span><span>&nbsp;Message management</span></li>
                                     <li class="d-flex mb-2"><span class="bs-icon-xs bs-icon-rounded bs-icon me-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-check fs-5 text-primary">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                                 <path d="M5 12l5 5l10 -10"></path>
-                                            </svg></span><span>Porta suscipit netus ad ac.</span></li>
+                                            </svg></span><span>Booking management</span></li>
                                     <li class="d-flex mb-2"><span class="bs-icon-xs bs-icon-rounded bs-icon me-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-check fs-5 text-primary">
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                                 <path d="M5 12l5 5l10 -10"></path>
-                                            </svg></span><span>Morbi praesent aptent integer.</span></li>
+                                            </svg></span><span>Integration with new systems upon request</span></li>
                                 </ul>
-                            </div><a class="btn btn-primary" role="button" href="#">Button</a>
+                            </div><a class="btn btn-primary" role="button" href="https://t.me/chatflow_support"><span style="color: var(--bs-btn-hover-color); background-color: var(--bs-btn-hover-bg);">Request</span></a>
                         </div>
                     </div>
                 </div>
@@ -288,47 +302,17 @@
             <div class="text-white bg-primary border rounded border-0 border-primary d-flex flex-column justify-content-between flex-lg-row p-4 p-md-5">
                 <div class="pb-2 pb-lg-1">
                     <h2 class="fw-bold text-warning mb-2">Not sure which plan suits you?</h2>
-                    <p class="mb-0">Imperdiet consectetur dolor, tristique himenaeos ultrices tristique neque.</p>
+                    <p class="mb-0">Contact us and we will offer you a suitable solution!</p>
                 </div>
-                <div class="my-2"><a class="btn btn-light fs-5 py-2 px-4" role="button" href="contacts.html">Contact us</a></div>
+                <div class="my-2"><a class="btn btn-light fs-5 py-2 px-4" role="button" href="https://t.me/chatflow_support">Contact us</a></div>
             </div>
         </div>
     </section>
     <footer>
         <div class="container py-4 py-lg-5">
-            <div class="row row-cols-2 row-cols-md-4">
-                <div class="col-12 col-md-3">
-                    <div class="fw-bold d-flex align-items-center mb-2"><span>chatflow</span></div>
-                    <p class="text-muted">Sem eleifend donec molestie, integer quisque orci aliquam.</p>
-                </div>
-                <div class="col-sm-4 col-md-3 text-lg-start d-flex flex-column">
-                    <h3 class="fs-6 fw-bold">Services</h3>
-                    <ul class="list-unstyled">
-                        <li><a href="#">Web design</a></li>
-                        <li><a href="#">Development</a></li>
-                        <li><a href="#">Hosting</a></li>
-                    </ul>
-                </div>
-                <div class="col-sm-4 col-md-3 text-lg-start d-flex flex-column">
-                    <h3 class="fs-6 fw-bold">About</h3>
-                    <ul class="list-unstyled">
-                        <li><a href="#">Company</a></li>
-                        <li><a href="#">Team</a></li>
-                        <li><a href="#">Legacy</a></li>
-                    </ul>
-                </div>
-                <div class="col-sm-4 col-md-3 text-lg-start d-flex flex-column">
-                    <h3 class="fs-6 fw-bold">Careers</h3>
-                    <ul class="list-unstyled">
-                        <li><a href="#">Job openings</a></li>
-                        <li><a href="#">Employee success</a></li>
-                        <li><a href="#">Benefits</a></li>
-                    </ul>
-                </div>
-            </div>
             <hr>
             <div class="text-muted d-flex justify-content-between align-items-center pt-3">
-                <p class="mb-0">Copyright © 2024 chatflow</p>
+                <p class="mb-0">Copyright © 2024 Сhatflow.bot</p>
                 <ul class="list-inline mb-0">
                     <li class="list-inline-item"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16" class="bi bi-facebook">
                             <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"></path>
@@ -343,8 +327,8 @@
             </div>
         </div>
     </footer>
-    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
-    <script src="assets/js/startup-modern.js"></script>
+    <script src="{% static 'assets/bootstrap/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'assets/js/startup-modern.js' %}"></script>
 </body>
 
 </html>

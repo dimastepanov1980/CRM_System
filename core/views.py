@@ -14,6 +14,8 @@ from django.db.models import Max
 
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 def home(request):
     return render(request, 'core/home.html')
@@ -42,6 +44,16 @@ def bot_list_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+
+from django.shortcuts import render
+
+def custom_404_view(request, exception):
+    logger.debug("Custom 404 handler called")
+    return render(request, '404.html', {'message': 'Hello, World!'}, status=404)
+
+def custom_400_view(request, exception):
+    return render(request, 'core/400.html', status=400)
 
 @login_required
 def user_list_view(request, bot_id):

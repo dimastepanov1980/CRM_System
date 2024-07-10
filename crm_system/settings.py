@@ -15,7 +15,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 logging.basicConfig(level=logging.DEBUG)
 
-DEBUG = os.getenv('DJANGO_DEBUG', '') == 'False'
+DEBUG = os.environ.get('DEBUG', 'False') == 'False'
 
 logging.debug(f'DEBUG: {DEBUG}')
 
@@ -23,7 +23,7 @@ if not DEBUG:
     ALLOWED_HOSTS = ['localhost', '127.0.0.1','chatflow.bot', 'www.chatflow.bot']
 else:
     ALLOWED_HOSTS = ['*']
-
+    
 logging.debug(f'ALLOWED_HOSTS: {ALLOWED_HOSTS}')
 
 DATABASES = {
@@ -74,18 +74,30 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'crm_system.wsgi.application'
 
-"""
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'dima_db',
-        'USER': 'dimastepanov',
-        'PASSWORD': 'Qwaqaq_123',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'debug.log'),
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        '__main__': {  # This ensures the root logger captures logs from your custom view
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
 }
-"""
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',

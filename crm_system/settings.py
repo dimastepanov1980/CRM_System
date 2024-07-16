@@ -15,7 +15,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 logging.basicConfig(level=logging.DEBUG)
 
-DEBUG = os.environ.get('DEBUG', 'False') == 'False'
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 logging.debug(f'DEBUG: {DEBUG}')
 

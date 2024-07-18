@@ -1,0 +1,32 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Specialists{% endblock %}
+
+{% block content %}
+    <h1 class="mt-4">Specialists</h1>
+    
+    <div id="specialist-detail-container">
+        <p>Select a specialist from the list to view details.</p>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="addSpecialistModal" tabindex="-1" aria-labelledby="addSpecialistModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addSpecialistModalLabel">Add Specialist</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addSpecialistForm" method="post" action="{% url 'specialist_list' %}">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button class="btn btn-primary" type="submit">Add Specialist</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+{% endblock %}
+

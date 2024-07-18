@@ -7,15 +7,13 @@ from django.views.generic import ListView, CreateView, UpdateView, DetailView
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
-from .forms import LoginForm, BotForm, AdminForm
-from .models import Bot, User, Message, Admin
+from .forms import LoginForm, BotForm, AdminForm, RegistrationForm, SpecialistForm
+from .models import Bot, User, Message, Company, UserCompanyRole, Specialist, Company
 from django.utils.dateparse import parse_date
 from django.db.models import Max
 
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 def home(request):
     return render(request, 'core/home.html')
@@ -26,27 +24,106 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            return redirect('bot_list')
+            return redirect('admin_dashboard')
     else:
         form = LoginForm()
     return render(request, 'core/login.html', {'form': form})
 
+def register(request):
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('admin_dashboard')  # Убедитесь, что этот URL соответствует панели администратора
+    else:
+        form = RegistrationForm()
+    return render(request, 'core/register.html', {'form': form})
+
+@login_required
+def admin_dashboard(request):
+    specialists = Specialist.objects.all()
+    form = SpecialistForm()
+    return render(request, 'core/admin_dashboard.html', {'specialists': specialists, 'form': form})
+
+@login_required
+def add_specialist_view(request):
+    if request.method == 'POST':
+        form = SpecialistForm(request.POST)
+        if form.is_valid():
+            specialist = form.save()
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'specialist': {
+                        'name': specialist.name,
+                        'specialization': specialist.specialization,
+                        'uuid': str(specialist.uuid),
+                    }
+                })
+            return redirect('specialist_list')
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'errors': form.errors})
+    else:
+        form = SpecialistForm()
+    return render(request, 'core/add_specialist.html', {'form': form})
+
+def specialist_schedule_view(request, uuid):
+    specialist = get_object_or_404(Specialist, uuid=uuid)
+    # Здесь вы можете добавить логику для получения расписания специалиста
+    return render(request, 'core/specialist_schedule.html', {'specialist': specialist})
+
+
+@login_required
+def specialist_list_view(request):
+    specialists = Specialist.objects.all()
+    form = SpecialistForm()
+
+    if request.method == 'POST':
+        form = SpecialistForm(request.POST)
+        if form.is_valid():
+            specialist = form.save()
+            return JsonResponse({
+                'success': True,
+                'specialist': {
+                    'uuid': specialist.uuid,
+                    'name': specialist.name,
+                    'specialization': specialist.specialization
+                }
+            })
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors})
+
+    return render(request, 'core/specialist_list.html', {'specialists': specialists, 'form': form})
+
+@login_required
+def specialist_detail_view(request, uuid):
+    logger.debug(f"Fetching details for specialist with UUID: {uuid}")
+    specialist = get_object_or_404(Specialist, uuid=uuid)
+    schedule = [
+        {"date": "2024-07-18", "time": "10:00-11:00"},
+        {"date": "2024-07-18", "time": "11:00-12:00"},
+    ]
+    return JsonResponse({
+        'name': specialist.name,
+        'specialization': specialist.specialization,
+        'description': specialist.description,
+        'experience': specialist.experience,
+        'schedule': schedule,
+    })
+#---------------------------------------------------------------------------------------------------------------------------
+
 @login_required
 def bot_list_view(request):
-    try:
-        admin = Admin.objects.get(user=request.user)
-        bots = Bot.objects.filter(admin=admin)
-    except Admin.DoesNotExist:
-        bots = []
+    user_roles = UserCompanyRole.objects.filter(user=request.user)
+    bots = Bot.objects.filter(admin__in=user_roles)
     return render(request, 'core/bot_list.html', {'bots': bots})
 
 @login_required
 def logout_view(request):
     logout(request)
     return redirect('login')
-
-
-from django.shortcuts import render
 
 def custom_404_view(request, exception):
     logger.debug("Custom 404 handler called")
@@ -79,14 +156,12 @@ def user_list_view(request, bot_id):
     
     return render(request, 'core/user_list.html', {'bot': bot, 'users': users, 'sort': sort})
 
-
 @login_required
 def message_list_view(request, bot_id, user_id):
     sort = request.GET.get('sort', 'desc')
     order = '-created_at' if sort == 'desc' else 'created_at'
     messages = Message.objects.filter(bot_id=bot_id, user_id=user_id).order_by(order)
     return render(request, 'core/message_list.html', {'messages': messages, 'user_id': user_id, 'bot_id': bot_id, 'sort': sort})
-
 
 class BotCreateView(CreateView):
     model = Bot
@@ -95,7 +170,8 @@ class BotCreateView(CreateView):
     success_url = reverse_lazy('bot_list')
 
     def form_valid(self, form):
-        form.instance.admin = Admin.objects.get(user=self.request.user)
+        user_role = UserCompanyRole.objects.get(user=self.request.user, role='Admin')
+        form.instance.admin = user_role
         return super().form_valid(form)
 
 class BotUpdateView(UpdateView):
@@ -114,10 +190,20 @@ class AdminCreateView(CreateView):
     template_name = 'core/admin_form.html'
     success_url = reverse_lazy('admin_list')
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        company = Company.objects.get(owner=self.request.user)
+        UserCompanyRole.objects.create(user=self.object, company=company, role='Admin')
+        return response
+
 class AdminListView(ListView):
     model = User
     template_name = 'core/admin_list.html'
     context_object_name = 'admins'
+
+    def get_queryset(self):
+        company = Company.objects.get(owner=self.request.user)
+        return User.objects.filter(usercompanyrole__company=company, usercompanyrole__role='Admin')
 
 class AdminUpdateView(UpdateView):
     model = User
@@ -148,8 +234,13 @@ def webhook(request):
             logging.info(f"Received message: {message_text}, message_type: {message_type}, user_id: {user_id}")
 
             # Создание нового объекта Message с полученными данными
+            user, created = User.objects.get_or_create(email=user_id)  # Пытаемся найти пользователя по email или создаем нового
+            if created:
+                user.set_unusable_password()  # Устанавливаем неиспользуемый пароль для безопасности, если пользователь создан автоматически
+                user.save()
+
             Message.objects.create(
-                user_id=user_id,
+                user=user,
                 text=message_text,
                 message_type=message_type,
                 bot=bot

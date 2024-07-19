@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 import uuid
+from schedule.models import Calendar
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -80,6 +81,12 @@ class Specialist(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='specialists')
     email = models.EmailField()
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    calendar = models.OneToOneField(Calendar, on_delete=models.CASCADE, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.calendar:
+            self.calendar = Calendar.objects.create(name=f"{self.name}'s Calendar")
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

@@ -1,6 +1,24 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import Bot, User, Specialist
+from schedule.models import Event
+
+class EventForm(forms.ModelForm):
+    class Meta:
+        model = Event
+        fields = ['title', 'start', 'end', 'description']
+
+    def __init__(self, *args, **kwargs):
+        self.specialist = kwargs.pop('specialist', None)
+        super().__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        event = super().save(commit=False)
+        if self.specialist:
+            event.calendar = self.specialist.calendar
+        if commit:
+            event.save()
+        return event
 
 class BotForm(forms.ModelForm):
     class Meta:

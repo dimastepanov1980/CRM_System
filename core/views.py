@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
 from .forms import LoginForm, BotForm, AdminForm, RegistrationForm, SpecialistForm
-from .models import Bot, User, Message, Company, UserCompanyRole, Specialist, Company
+from .models import Bot, User, Message, Company, UserCompanyRole, Specialist, Company, Events
 from django.utils.dateparse import parse_date
 from django.db.models import Max
 
@@ -73,6 +73,55 @@ def specialist_schedule_view(request, uuid):
     specialist = get_object_or_404(Specialist, uuid=uuid)
     # Здесь вы можете добавить логику для получения расписания специалиста
     return render(request, 'core/specialist_schedule.html', {'specialist': specialist})
+
+def index(request):  
+    all_events = Events.objects.all()
+    context = {
+        "events":all_events,
+    }
+    return render(request,'index.html',context)
+ 
+def all_events(request):                                                                                                 
+    all_events = Events.objects.all()                                                                                    
+    out = []                                                                                                             
+    for event in all_events:                                                                                             
+        out.append({                                                                                                     
+            'title': event.name,                                                                                         
+            'id': event.id,                                                                                              
+            'start': event.start.strftime("%m/%d/%Y, %H:%M:%S"),                                                         
+            'end': event.end.strftime("%m/%d/%Y, %H:%M:%S"),                                                             
+        })                                                                                                               
+                                                                                                                      
+    return JsonResponse(out, safe=False) 
+ 
+def add_event(request):
+    start = request.GET.get("start", None)
+    end = request.GET.get("end", None)
+    title = request.GET.get("title", None)
+    event = Events(name=str(title), start=start, end=end)
+    event.save()
+    data = {}
+    return JsonResponse(data)
+ 
+def update(request):
+    start = request.GET.get("start", None)
+    end = request.GET.get("end", None)
+    title = request.GET.get("title", None)
+    id = request.GET.get("id", None)
+    event = Events.objects.get(id=id)
+    event.start = start
+    event.end = end
+    event.name = title
+    event.save()
+    data = {}
+    return JsonResponse(data)
+ 
+def remove(request):
+    id = request.GET.get("id", None)
+    event = Events.objects.get(id=id)
+    event.delete()
+    data = {}
+    return JsonResponse(data)
 
 
 @login_required

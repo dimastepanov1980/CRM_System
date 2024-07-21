@@ -150,16 +150,12 @@ def specialist_list_view(request):
 def specialist_detail_view(request, uuid):
     logger.debug(f"Fetching details for specialist with UUID: {uuid}")
     specialist = get_object_or_404(Specialist, uuid=uuid)
-    schedule = [
-        {"date": "2024-07-18", "time": "10:00-11:00"},
-        {"date": "2024-07-18", "time": "11:00-12:00"},
-    ]
+
     return JsonResponse({
         'name': specialist.name,
         'specialization': specialist.specialization,
         'description': specialist.description,
         'experience': specialist.experience,
-        'schedule': schedule,
     })
 #---------------------------------------------------------------------------------------------------------------------------
 

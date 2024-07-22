@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
 from .forms import LoginForm, BotForm, AdminForm, RegistrationForm, SpecialistForm
-from .models import Bot, User, Message, Company, UserCompanyRole, Specialist, Company, Events
+from .models import Bot, User, Message, Company, UserCompanyRole, Specialist, Company, Event
 from django.utils.dateparse import parse_date
 from django.db.models import Max
 
@@ -74,55 +74,6 @@ def specialist_schedule_view(request, uuid):
     # Здесь вы можете добавить логику для получения расписания специалиста
     return render(request, 'core/specialist_schedule.html', {'specialist': specialist})
 
-def index(request):  
-    all_events = Events.objects.all()
-    context = {
-        "events":all_events,
-    }
-    return render(request,'index.html',context)
- 
-def all_events(request):                                                                                                 
-    all_events = Events.objects.all()                                                                                    
-    out = []                                                                                                             
-    for event in all_events:                                                                                             
-        out.append({                                                                                                     
-            'title': event.name,                                                                                         
-            'id': event.id,                                                                                              
-            'start': event.start.strftime("%m/%d/%Y, %H:%M:%S"),                                                         
-            'end': event.end.strftime("%m/%d/%Y, %H:%M:%S"),                                                             
-        })                                                                                                               
-                                                                                                                      
-    return JsonResponse(out, safe=False) 
- 
-def add_event(request):
-    start = request.GET.get("start", None)
-    end = request.GET.get("end", None)
-    title = request.GET.get("title", None)
-    event = Events(name=str(title), start=start, end=end)
-    event.save()
-    data = {}
-    return JsonResponse(data)
- 
-def update(request):
-    start = request.GET.get("start", None)
-    end = request.GET.get("end", None)
-    title = request.GET.get("title", None)
-    id = request.GET.get("id", None)
-    event = Events.objects.get(id=id)
-    event.start = start
-    event.end = end
-    event.name = title
-    event.save()
-    data = {}
-    return JsonResponse(data)
- 
-def remove(request):
-    id = request.GET.get("id", None)
-    event = Events.objects.get(id=id)
-    event.delete()
-    data = {}
-    return JsonResponse(data)
-
 
 @login_required
 def specialist_list_view(request):
@@ -150,13 +101,47 @@ def specialist_list_view(request):
 def specialist_detail_view(request, uuid):
     logger.debug(f"Fetching details for specialist with UUID: {uuid}")
     specialist = get_object_or_404(Specialist, uuid=uuid)
+    events = Event.objects.filter(calendar=specialist.calendar)
+    events_data = []
+    for event in events:
+        events_data.append({
+            'title': event.title,
+            'start': event.start.isoformat(),
+            'end': event.end.isoformat(),
+        })
 
     return JsonResponse({
         'name': specialist.name,
         'specialization': specialist.specialization,
         'description': specialist.description,
         'experience': specialist.experience,
+        'events': events_data,
     })
+
+@csrf_exempt
+def add_specialist_view(request):
+    if request.method == 'POST':
+        form = SpecialistForm(request.POST)
+        if form.is_valid():
+            specialist = form.save()
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'specialist': {
+                        'name': specialist.name,
+                        'specialization': specialist.specialization,
+                        'uuid': str(specialist.uuid),
+                    }
+                })
+            return redirect('specialist_list')
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'errors': form.errors})
+    else:
+        form = SpecialistForm()
+    return render(request, 'core/add_specialist.html', {'form': form})
+
+
 #---------------------------------------------------------------------------------------------------------------------------
 
 @login_required

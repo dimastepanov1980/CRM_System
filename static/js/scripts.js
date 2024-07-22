@@ -121,7 +121,7 @@ window.addEventListener('DOMContentLoaded', event => {
                    var title = prompt("Enter Event Title");
                    if (title) {
                        var start = $.fullCalendar.formatDate(start, "Y-MM-DD HH:mm:ss");
-                       var end = $.fullCalendar.formatDate(end, "Y-MM-DD HH:mm:ss");
+                       var end = $.fullCalendar.formatDate(end, "Y-MM-DD HH:mm:ss"); 
                        $.ajax({
                            type: "GET",
                            url: '/add_event',

@@ -1,16 +1,53 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 import uuid
+    
+class Company(models.Model):
+    name = models.CharField(max_length=100)
+    unique_url = models.URLField(unique=True)
+    owner = models.ForeignKey('User', on_delete=models.CASCADE, related_name='companies')
 
-class Events(models.Model):
+    def __str__(self):
+        return self.name
+
+class Specialist(models.Model):
+    name = models.CharField(max_length=100)
+    specialization = models.CharField(max_length=100)
+    description = models.TextField()
+    experience = models.IntegerField()
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='specialists')
+    email = models.EmailField()
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    calendar = models.OneToOneField('Calendar', on_delete=models.CASCADE, null=True, blank=True, related_name='specialist_calendar')
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not self.calendar:
+            calendar = Calendar.objects.create(name=f"{self.name}'s Calendar", specialist=self)
+            self.calendar = calendar
+            super().save(update_fields=['calendar'])
+
+    def __str__(self):
+        return self.name
+
+class Calendar(models.Model):
+    name = models.CharField(max_length=255)
+    specialist = models.OneToOneField(Specialist, on_delete=models.CASCADE, related_name='specialist_calendar')
+
+    def __str__(self):
+        return self.name
+
+class Event(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255,null=True,blank=True)
-    start = models.DateTimeField(null=True,blank=True)
-    end = models.DateTimeField(null=True,blank=True)
- 
-    class Meta:  
-        db_table = "tblevents"
-        
+    calendar = models.ForeignKey(Calendar, on_delete=models.CASCADE, related_name='events')
+    title = models.CharField(max_length=255)
+    start = models.DateTimeField()
+    end = models.DateTimeField()
+
+    def __str__(self):
+        return self.title    
+    
+
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -25,6 +62,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(email, password, **extra_fields)
+    
 
 class User(AbstractBaseUser, PermissionsMixin):
     ROLES = [
@@ -48,14 +86,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
     
-class Company(models.Model):
-    name = models.CharField(max_length=255)
-    unique_url = models.URLField(unique=True)
-    owner = models.ForeignKey(User, related_name='owned_companies', on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.name
-
 class UserCompanyRole(models.Model):
     ROLES = [
         ('MasterAdmin', 'Master Admin'),
@@ -80,19 +110,7 @@ class Bot(models.Model):
 
     def __str__(self):
         return self.name
-
-class Specialist(models.Model):
-    name = models.CharField(max_length=100)
-    specialization = models.CharField(max_length=100)
-    description = models.TextField()
-    experience = models.IntegerField()
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='specialists')
-    email = models.EmailField()
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-
-    def __str__(self):
-        return self.name
-    
+   
 class Message(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     text = models.TextField()

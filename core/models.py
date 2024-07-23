@@ -37,6 +37,7 @@ class Calendar(models.Model):
     def __str__(self):
         return self.name
 
+
 class Event(models.Model):
     id = models.AutoField(primary_key=True)
     calendar = models.ForeignKey(Calendar, on_delete=models.CASCADE, related_name='events')

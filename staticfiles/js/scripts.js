@@ -35,8 +35,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                     .then(data => {
                         console.log('Specialist details:', data); // Отладочное сообщение
-                        console.log('Calendar ID:', data.calendar_id); // Отладочное сообщение
-
                         const specialistDetailContainer = document.getElementById('specialist-detail-container');
                         specialistDetailContainer.innerHTML = `
                             <h2>${data.name}</h2>
@@ -108,13 +106,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Calendar initialization
-    function updateCalendar(events, calId) {
-        console.log('Initializing calendar with events, ID:', events, calId); // Отладочное сообщение
-        const csrftoken = document.getElementById('csrf-token').value;
+    function updateCalendar(events, calendarId) {
+        console.log('Initializing calendar with events:', events); // Отладочное сообщение
         var calendarEl = document.getElementById('calendar');
         var eventsData = JSON.parse(document.getElementById('events-data').textContent);
-    
-        $('#calendar').fullCalendar({
+
+        var calendar = $('#calendar').fullCalendar({
             header: {
                 left: 'prev,next today',
                 center: 'title',
@@ -125,33 +122,26 @@ document.addEventListener('DOMContentLoaded', function() {
             selectHelper: true,
             editable: true,
             eventLimit: true,
-            select: function(start, end, allDay) {                
-                console.log('Select event triggered', 'calendarId', calId); // Отладочное сообщение
+            select: function(start, end, allDay) {
                 var title = prompt("Enter Event Title");
-                console.log('Entered title:', title); // Отладочное сообщение
                 if (title) {
-                    var startIso = start.toISOString();
-                    var endIso = end.toISOString();
-                    console.log('Adding event with title:', title, 'start:', startIso, 'end:', endIso, 'calendarId:', calId); // Отладочное сообщение
-    
+                    var start = start.toISOString();
+                    var end = end.toISOString();
+                    console.log('Adding event with title:', title, 'start:', start, 'end:', end, 'calendarId:', calendarId); // Отладочное сообщение
+                    
                     fetch('/add_event/', {
-                        method: 'POST',
+                        method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRFToken': csrftoken // Добавление CSRF-токена в заголовок
+                            'X-CSRFToken': '{{ csrf_token }}'
                         },
-                        body: JSON.stringify({'title': title, 'start': startIso, 'end': endIso, 'calendar_id': calId})
+                        body: JSON.stringify({'title': title, 'start': start, 'end': end, 'calendar_id': calendarId})
                     })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok ' + response.statusText);
-                        }
-                        return response.json();
-                    })
+                    .then(response => response.json())
                     .then(data => {
                         console.log('Add event response:', data); // Отладочное сообщение
                         if (data.success) {
-                            $('#calendar').fullCalendar('refetchEvents'); // Перезагрузка событий в календаре
+                            calendar.fullCalendar('refetchEvents');
                             alert("Added Successfully");
                         } else {
                             alert('Error: ' + data.error);
@@ -163,17 +153,89 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
                 console.log('No Adding the event:', title); // Отладочное сообщение
+            },
+            eventResize: function(event) {
+                var start = event.start.toISOString();
+                var end = event.end.toISOString();
+                var title = event.title;
+                var id = event.id;
+                console.log('Resizing event with id:', id, 'title:', title, 'start:', start, 'end:', end); // Отладочное сообщение
+                
+                fetch('/update', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({'title': title, 'start': start, 'end': end, 'id': id})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Update event response:', data); // Отладочное сообщение
+                    calendar.fullCalendar('refetchEvents');
+                    alert('Event Update');
+                })
+                .catch(error => {
+                    console.error('Error updating event:', error); // Отладочное сообщение
+                    alert('There is a problem!!!');
+                });
+            },
+            eventDrop: function(event) {
+                var start = event.start.toISOString();
+                var end = event.end.toISOString();
+                var title = event.title;
+                var id = event.id;
+                console.log('Dropping event with id:', id, 'title:', title, 'start:', start, 'end:', end); // Отладочное сообщение
+                
+                fetch('/update', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({'title': title, 'start': start, 'end': end, 'id': id})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Update event response:', data); // Отладочное сообщение
+                    calendar.fullCalendar('refetchEvents');
+                    alert('Event Update');
+                })
+                .catch(error => {
+                    console.error('Error updating event:', error); // Отладочное сообщение
+                    alert('There is a problem!!!');
+                });
+            },
+            eventClick: function(event) {
+                if (confirm("Are you sure you want to remove it?")) {
+                    var id = event.id;
+                    console.log('Removing event with id:', id); // Отладочное сообщение
+                    
+                    fetch('/remove', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({'id': id})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Remove event response:', data); // Отладочное сообщение
+                        calendar.fullCalendar('refetchEvents');
+                        alert('Event Removed');
+                    })
+                    .catch(error => {
+                        console.error('Error removing event:', error); // Отладочное сообщение
+                        alert('There is a problem!!!');
+                    });
+                }
             }
         });
-    
-        $('#calendar').fullCalendar('refetchEvents');
+
+        calendar.fullCalendar('refetchEvents');
     }
 
-    
-    
     // Initial calendar rendering
     updateCalendar(JSON.parse(document.getElementById('events-data').textContent), document.getElementById('calendar').getAttribute('data-calendar-id'));
-
 });
-
-

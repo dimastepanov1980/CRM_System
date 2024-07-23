@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
 from .forms import LoginForm, BotForm, AdminForm, RegistrationForm, SpecialistForm
-from .models import Bot, User, Message, Company, UserCompanyRole, Specialist, Company, Event
+from .models import Bot, User, Message, Company, UserCompanyRole, Specialist, Company, Event, Calendar
 from django.utils.dateparse import parse_date
 from django.db.models import Max
 
@@ -116,6 +116,7 @@ def specialist_detail_view(request, uuid):
         'description': specialist.description,
         'experience': specialist.experience,
         'events': events_data,
+        'calendar_id': specialist.calendar.id,
     })
 
 @csrf_exempt
@@ -142,6 +143,41 @@ def add_specialist_view(request):
     return render(request, 'core/add_specialist.html', {'form': form})
 
 
+
+
+@login_required
+def add_event_view(request):
+    if request.method == 'GET':
+        title = request.GET.get('title')
+        start = request.GET.get('start')
+        end = request.GET.get('end')
+        calendar_id = request.GET.get('calendar_id')
+        calendar = get_object_or_404(Calendar, id=calendar_id)
+        event = Event.objects.create(title=title, start=start, end=end, calendar=calendar)
+        logger.debug(f"add_event_view: {title}")
+        return JsonResponse({'id': event.id})
+
+@login_required
+def update_event_view(request):
+    if request.method == 'GET':
+        event_id = request.GET.get('id')
+        title = request.GET.get('title')
+        start = request.GET.get('start')
+        end = request.GET.get('end')
+        event = get_object_or_404(Event, id=event_id)
+        event.title = title
+        event.start = start
+        event.end = end
+        event.save()
+        return JsonResponse({'status': 'ok'})
+
+@login_required
+def remove_event_view(request):
+    if request.method == 'GET':
+        event_id = request.GET.get('id')
+        event = get_object_or_404(Event, id=event_id)
+        event.delete()
+        return JsonResponse({'status': 'ok'})
 #---------------------------------------------------------------------------------------------------------------------------
 
 @login_required

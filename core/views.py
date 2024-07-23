@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.generic import ListView, CreateView, UpdateView, DetailView
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
 from .forms import LoginForm, BotForm, AdminForm, RegistrationForm, SpecialistForm
@@ -101,7 +101,7 @@ def specialist_list_view(request):
 def specialist_detail_view(request, uuid):
     logger.debug(f"Fetching details for specialist with UUID: {uuid}")
     specialist = get_object_or_404(Specialist, uuid=uuid)
-    events = Event.objects.filter(calendar=specialist.calendar)
+    events = Event.objects.filter(user=request.user)  # Фильтруем события по текущему пользователю
     events_data = []
     for event in events:
         events_data.append({
@@ -116,7 +116,6 @@ def specialist_detail_view(request, uuid):
         'description': specialist.description,
         'experience': specialist.experience,
         'events': events_data,
-        'calendar_id': specialist.calendar.id,
     })
 
 @csrf_exempt
@@ -143,41 +142,65 @@ def add_specialist_view(request):
     return render(request, 'core/add_specialist.html', {'form': form})
 
 
-
+@login_required
+def all_events_view(request):
+    events = Event.objects.filter(user=request.user)
+    events_data = []
+    for event in events:
+        events_data.append({
+            'id': event.id,
+            'title': event.title,
+            'start': event.start.isoformat(),
+            'end': event.end.isoformat(),
+        })
+    return JsonResponse(events_data, safe=False)
 
 @login_required
 def add_event_view(request):
-    if request.method == 'GET':
-        title = request.GET.get('title')
-        start = request.GET.get('start')
-        end = request.GET.get('end')
-        calendar_id = request.GET.get('calendar_id')
-        calendar = get_object_or_404(Calendar, id=calendar_id)
-        event = Event.objects.create(title=title, start=start, end=end, calendar=calendar)
-        logger.debug(f"add_event_view: {title}")
-        return JsonResponse({'id': event.id})
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        title = data.get('title')
+        start = data.get('start')
+        end = data.get('end')
+
+        if title and start and end:
+            event = Event.objects.create(user=request.user, title=title, start=start, end=end)
+            return JsonResponse({'success': True, 'id': event.id})
+        else:
+            return HttpResponseBadRequest('Missing parameters')
 
 @login_required
 def update_event_view(request):
-    if request.method == 'GET':
-        event_id = request.GET.get('id')
-        title = request.GET.get('title')
-        start = request.GET.get('start')
-        end = request.GET.get('end')
-        event = get_object_or_404(Event, id=event_id)
-        event.title = title
-        event.start = start
-        event.end = end
-        event.save()
-        return JsonResponse({'status': 'ok'})
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        event_id = data.get('id')
+        title = data.get('title')
+        start = data.get('start')
+        end = data.get('end')
+
+        event = get_object_or_404(Event, id=event_id, user=request.user)
+        if event:
+            event.title = title
+            event.start = start
+            event.end = end
+            event.save()
+            return JsonResponse({'success': True})
+        else:
+            return HttpResponseBadRequest('Event not found')
 
 @login_required
 def remove_event_view(request):
-    if request.method == 'GET':
-        event_id = request.GET.get('id')
-        event = get_object_or_404(Event, id=event_id)
-        event.delete()
-        return JsonResponse({'status': 'ok'})
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        event_id = data.get('id')
+
+        event = get_object_or_404(Event, id=event_id, user=request.user)
+        if event:
+            event.delete()
+            return JsonResponse({'success': True})
+        else:
+            return HttpResponseBadRequest('Event not found')
+
 #---------------------------------------------------------------------------------------------------------------------------
 
 @login_required

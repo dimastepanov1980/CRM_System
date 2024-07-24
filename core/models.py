@@ -18,21 +18,6 @@ class Specialist(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='specialists')
     email = models.EmailField()
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    calendar = models.OneToOneField('Calendar', on_delete=models.CASCADE, null=True, blank=True, related_name='specialist_calendar')
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        if not self.calendar:
-            calendar = Calendar.objects.create(name=f"{self.name}'s Calendar", specialist=self)
-            self.calendar = calendar
-            super().save(update_fields=['calendar'])
-
-    def __str__(self):
-        return self.name
-
-class Calendar(models.Model):
-    name = models.CharField(max_length=255)
-    specialist = models.OneToOneField(Specialist, on_delete=models.CASCADE, related_name='specialist_calendar')
 
     def __str__(self):
         return self.name
@@ -76,7 +61,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
     
 class Event(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='events')
+    specialist = models.ForeignKey(Specialist, on_delete=models.CASCADE, related_name='events')
     title = models.CharField(max_length=255)
     start = models.DateTimeField()
     end = models.DateTimeField()

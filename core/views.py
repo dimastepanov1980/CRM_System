@@ -8,7 +8,7 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
 from .forms import LoginForm, BotForm, AdminForm, RegistrationForm, SpecialistForm
-from .models import Bot, User, Message, Company, UserCompanyRole, Specialist, Company, Event, Calendar
+from .models import Bot, User, Message, Company, UserCompanyRole, Specialist, Company, Event
 from django.utils.dateparse import parse_date
 from django.db.models import Max
 
@@ -52,6 +52,7 @@ def add_specialist_view(request):
         form = SpecialistForm(request.POST)
         if form.is_valid():
             specialist = form.save()
+            logger.debug(f"Specialist created: {specialist.name}, {specialist.specialization}, {specialist.email}, {specialist.uuid}")
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
                     'success': True,
@@ -101,7 +102,7 @@ def specialist_list_view(request):
 def specialist_detail_view(request, uuid):
     logger.debug(f"Fetching details for specialist with UUID: {uuid}")
     specialist = get_object_or_404(Specialist, uuid=uuid)
-    events = Event.objects.filter(user=request.user)  # Фильтруем события по текущему пользователю
+    events = Event.objects.filter(specialist=specialist)
     events_data = []
     for event in events:
         events_data.append({
@@ -116,6 +117,7 @@ def specialist_detail_view(request, uuid):
         'description': specialist.description,
         'experience': specialist.experience,
         'events': events_data,
+        'specialist_id': specialist.id, 
     })
 
 @csrf_exempt
@@ -141,19 +143,21 @@ def add_specialist_view(request):
         form = SpecialistForm()
     return render(request, 'core/add_specialist.html', {'form': form})
 
+@login_required
+def get_user_events(request, specialist_uuid):
+    specialist = get_object_or_404(Specialist, uuid=specialist_uuid)
+    events = Event.objects.filter(specialist=specialist)
+    events_data = [{
+        'title': event.title,
+        'start': event.start.isoformat(),
+        'end': event.end.isoformat(),
+    } for event in events]
+    return JsonResponse(events_data, safe=False)
 
 @login_required
 def all_events_view(request):
-    events = Event.objects.filter(user=request.user)
-    events_data = []
-    for event in events:
-        events_data.append({
-            'id': event.id,
-            'title': event.title,
-            'start': event.start.isoformat(),
-            'end': event.end.isoformat(),
-        })
-    return JsonResponse(events_data, safe=False)
+    events = Event.objects.all().values('title', 'start', 'end', 'specialist_id')
+    return JsonResponse(list(events), safe=False)
 
 @login_required
 def add_event_view(request):
@@ -162,12 +166,15 @@ def add_event_view(request):
         title = data.get('title')
         start = data.get('start')
         end = data.get('end')
+        specialist_id = data.get('specialist_id')
+        logger.debug(f"add event for specialist with UUID: {specialist_id}")
 
-        if title and start and end:
-            event = Event.objects.create(user=request.user, title=title, start=start, end=end)
-            return JsonResponse({'success': True, 'id': event.id})
-        else:
-            return HttpResponseBadRequest('Missing parameters')
+        specialist = get_object_or_404(Specialist, id=specialist_id)
+        event = Event.objects.create(title=title, start=start, end=end, specialist=specialist)
+        return JsonResponse({'success': True, 'id': event.id})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
+    
 
 @login_required
 def update_event_view(request):

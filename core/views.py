@@ -50,34 +50,55 @@ def register(request):
     return render(request, 'core/register.html', {'form': form})
 
 @login_required
-def admin_dashboard(request):
-    specialists = Specialist.objects.all()
-    form = SpecialistForm()
-    return render(request, 'core/admin_dashboard.html')
+def admin_dashboard_view(request):
+    user = request.user
+    company = Company.objects.get(owner=user)
+    specialists = Specialist.objects.filter(company=company)
+    form = SpecialistForm()  # Создаем экземпляр формы
+
+    if request.method == 'POST':
+        form = SpecialistForm(request.POST)
+        if form.is_valid():
+            specialist = form.save(commit=False)
+            specialist.company = company
+            specialist.save()
+            return JsonResponse({
+                'success': True,
+                'specialist': {
+                    'uuid': specialist.uuid,
+                    'name': specialist.name,
+                    'specialization': specialist.specialization
+                }
+            })
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors})
+
+    return render(request, 'core/admin_dashboard.html', {'specialists': specialists, 'form': form})
 
 @login_required
-def add_specialist_view(request):
+def specialist_list_view(request):
+    user = request.user
+    company = Company.objects.get(owner=user)
+    specialists = Specialist.objects.filter(company=company)
+    form = SpecialistForm()
+    logger.debug(f"Fetching specialist list for company: {specialists} {company}")
+
     if request.method == 'POST':
         form = SpecialistForm(request.POST)
         if form.is_valid():
             specialist = form.save()
-            logger.debug(f"Specialist created: {specialist.name}, {specialist.specialization}, {specialist.email}, {specialist.uuid}")
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': True,
-                    'specialist': {
-                        'name': specialist.name,
-                        'specialization': specialist.specialization,
-                        'uuid': str(specialist.uuid),
-                    }
-                })
-            return redirect('specialist_list')
+            return JsonResponse({
+                'success': True,
+                'specialist': {
+                    'uuid': specialist.uuid,
+                    'name': specialist.name,
+                    'specialization': specialist.specialization
+                }
+            })
         else:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'errors': form.errors})
-    else:
-        form = SpecialistForm()
-    return render(request, 'core/add_specialist.html', {'form': form})
+            return JsonResponse({'success': False, 'errors': form.errors})
+
+    return render(request, 'core/specialist_list.html', {'specialists': specialists, 'form': form})
 
 def specialist_schedule_view(request, uuid):
     specialist = get_object_or_404(Specialist, uuid=uuid)

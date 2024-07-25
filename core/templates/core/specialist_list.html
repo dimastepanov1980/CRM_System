@@ -1,4 +1,3 @@
-<!-- specialist_list.html -->
 {% extends 'core/base.html' %}
 
 {% block title %}Specialist Details{% endblock %}
@@ -7,16 +6,12 @@
 <h1>Specialist Details</h1>
 
 <div id="specialist-detail-container">
-    <p>Select a specialist from the list to view details. Calendar ID: "{{ specialist.id }}"</p>
+    <p>Select a specialist from the list to view details.</p>
 </div>
 
 <h2>Calendar</h2>
 <div id="calendar" style="width:100% !important"></div>
 
-<!-- Сохраняем данные событий в скрытом элементе с использованием json_script -->
-{{ events|json_script:"events-data" }}
-
 <!-- Скрытое поле для CSRF-токена -->
 <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
-<input type="hidden" id="specialist-id" value="{{ specialist.id }}">
 {% endblock %}

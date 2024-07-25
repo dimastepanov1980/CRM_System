@@ -1,0 +1,24 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Specialist Details{% endblock %}
+
+{% block content %}
+<h1>Specialist Details</h1>
+
+<div id="specialist-detail-container">
+    <h2>{{ specialist.name }}</h2>
+    <p><strong>Specialization:</strong> {{ specialist.specialization }}</p>
+    <p><strong>Description:</strong> {{ specialist.description }}</p>
+    <p><strong>Experience:</strong> {{ specialist.experience }} years</p>
+</div>
+
+<h2>Calendar</h2>
+<div id="calendar" style="width:100% !important"></div>
+
+<!-- Скрытое поле для CSRF-токена -->
+<input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+<input type="hidden" id="specialist-id" value="{{ specialist.id }}">
+
+<!-- Скрытый элемент для хранения событий -->
+<script id="events-data" type="application/json">{{ events|safe }}</script>
+{% endblock %}

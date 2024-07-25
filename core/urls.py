@@ -1,6 +1,6 @@
 from django.urls import path
 from django.conf.urls import handler404, handler400
-from .views import admin_dashboard, specialist_list_view, add_event_view, all_events_view, get_user_events, update_event_view, remove_event_view, specialist_detail_view, add_specialist_view, login_view, register, bot_list_view, logout_view, custom_404_view, custom_400_view, home, BotCreateView, BotUpdateView, BotDetailView, message_list_view, user_list_view, webhook, AdminCreateView, AdminListView, AdminUpdateView
+from .views import admin_dashboard_view, specialist_list_view, add_event_view, all_events_view, get_user_events, update_event_view, remove_event_view, specialist_detail_view, add_specialist_view, login_view, register, bot_list_view, logout_view, custom_404_view, custom_400_view, home, BotCreateView, BotUpdateView, BotDetailView, message_list_view, user_list_view, webhook, AdminCreateView, AdminListView, AdminUpdateView
 
 
 urlpatterns = [
@@ -10,7 +10,7 @@ urlpatterns = [
     path('register/', register, name='register'),
 
     
-    path('admin_dashboard/', admin_dashboard, name='admin_dashboard'),
+    path('admin_dashboard/', admin_dashboard_view, name='admin_dashboard'),
     path('specialists/', specialist_list_view, name='specialist_list'),
     path('specialist/<uuid:uuid>/detail/', specialist_detail_view, name='specialist_detail'),
     path('add_specialist/', add_specialist_view, name='add_specialist'),

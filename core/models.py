@@ -51,7 +51,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
-
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
@@ -59,15 +58,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
-    
-class Event(models.Model):
-    specialist = models.ForeignKey(Specialist, on_delete=models.CASCADE, related_name='events')
-    title = models.CharField(max_length=255)
-    start = models.DateTimeField()
-    end = models.DateTimeField()
-
-    def __str__(self):
-        return self.title
 
 class UserCompanyRole(models.Model):
     ROLES = [
@@ -86,6 +76,16 @@ class UserCompanyRole(models.Model):
     def __str__(self):
         return f"{self.user.email} - {self.company.name} ({self.role})"
     
+
+class Event(models.Model):
+    specialist = models.ForeignKey(Specialist, on_delete=models.CASCADE, related_name='events')
+    title = models.CharField(max_length=255)
+    start = models.DateTimeField()
+    end = models.DateTimeField()
+
+    def __str__(self):
+        return self.title
+
 class Bot(models.Model):
     name = models.CharField(max_length=100)
     token = models.CharField(max_length=200)

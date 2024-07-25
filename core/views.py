@@ -33,9 +33,18 @@ def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            user = form.save(commit=False)
+            user.role = 'MasterAdmin'
+            user.is_active = True
+            user.save()
+
+            # Создание компании
+            company_name = form.cleaned_data.get('company_name')
+            unique_url = form.clean_company_name()  # Используем очищенное название компании
+            company = Company.objects.create(name=company_name, unique_url=unique_url, owner=user)
+
             login(request, user)
-            return redirect('admin_dashboard')  # Убедитесь, что этот URL соответствует панели администратора
+            return redirect('admin_dashboard')
     else:
         form = RegistrationForm()
     return render(request, 'core/register.html', {'form': form})
@@ -44,7 +53,7 @@ def register(request):
 def admin_dashboard(request):
     specialists = Specialist.objects.all()
     form = SpecialistForm()
-    return render(request, 'core/admin_dashboard.html', {'specialists': specialists, 'form': form})
+    return render(request, 'core/admin_dashboard.html')
 
 @login_required
 def add_specialist_view(request):
@@ -78,8 +87,11 @@ def specialist_schedule_view(request, uuid):
 
 @login_required
 def specialist_list_view(request):
-    specialists = Specialist.objects.all()
+    user = request.user
+    company = Company.objects.get(owner=user)
+    specialists = Specialist.objects.filter(company=company)
     form = SpecialistForm()
+    logger.debug(f"Fetching specialist list for company: {specialists} {company}")
 
     if request.method == 'POST':
         form = SpecialistForm(request.POST)

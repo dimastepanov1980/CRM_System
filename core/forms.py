@@ -1,3 +1,4 @@
+import unidecode
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import Bot, User, Specialist
@@ -10,6 +11,7 @@ class BotForm(forms.ModelForm):
 class RegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True)
     name = forms.CharField(max_length=100, required=True)
+    company_name = forms.CharField(max_length=100, required=True, help_text='Название вашей компании (только латиница)')
 
     class Meta:
         model = User
@@ -23,7 +25,14 @@ class RegistrationForm(UserCreationForm):
         if commit:
             user.save()
         return user
+    
+    def clean_company_name(self):
+        company_name = self.cleaned_data['company_name']
+        company_name_latin = unidecode.unidecode(company_name)
+        company_name_latin = company_name_latin.replace(" ", "-").lower()
+        return company_name_latin
 
+    
 class SpecialistForm(forms.ModelForm):
     class Meta:
         model = Specialist

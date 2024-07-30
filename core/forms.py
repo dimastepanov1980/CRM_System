@@ -1,7 +1,7 @@
 import unidecode
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import Bot, User, Specialist
+from .models import Bot, User, Specialist, ServiceCategory, Service
 
 class BotForm(forms.ModelForm):
     class Meta:
@@ -34,9 +34,40 @@ class RegistrationForm(UserCreationForm):
 
     
 class SpecialistForm(forms.ModelForm):
+    services = forms.ModelMultipleChoiceField(
+        queryset=Service.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False
+    )
+
     class Meta:
         model = Specialist
-        fields = ['name', 'specialization', 'description', 'experience', 'company', 'email']
+        fields = ['name', 'specialization', 'description', 'experience', 'email', 'phone_number', 'work_schedule', 'photo', 'services']
+        widgets = {
+            'work_schedule': forms.HiddenInput(),  # Скрытое поле, пока не используем
+            'photo': forms.ClearableFileInput(attrs={'class': 'form-control-file'})
+        }
+        
+
+class ServiceCategoryForm(forms.ModelForm):
+    class Meta:
+        model = ServiceCategory
+        fields = ['name', 'description']        
+
+class ServiceForm(forms.ModelForm):
+    class Meta:
+        model = Service
+        fields = ['name', 'description', 'duration', 'price', 'category', 'specialists']
+        widgets = {
+            'specialists': forms.CheckboxSelectMultiple(),
+        }
+        help_texts = {
+            'specialists': 'You can select multiple specialists for this service.',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ServiceForm, self).__init__(*args, **kwargs)
+        self.fields['specialists'].required = False  # Установим поле specialists как необязательное
 
 class LoginForm(AuthenticationForm):
     username = forms.EmailField(widget=forms.EmailInput(attrs={'autofocus': True}), label='Email')

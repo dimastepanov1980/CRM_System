@@ -46,6 +46,30 @@
                     </ul>
                 </div>
 
+                <!-- Menu Services -->
+                <a class="list-group-item list-group-item-action list-group-item-light p-3" href="#servicesSubmenu" data-bs-toggle="collapse" aria-expanded="false">Services</a>
+                
+                <!-- Menu Services content wrapper-->
+                <div class="collapse" id="servicesSubmenu">
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <a data-category="all" href="{% url 'services_list' %}">All Services</a>
+                        </li>
+                        {% for category in service_categories %}
+                            <li class="list-group-item">
+                                <a href="#" class="category-link" data-category="{{ category.id }}">{{ category.name }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <ul class="list-group mt-3" id="service-list">
+                        {% for service in services %}
+                            <li class="list-group-item service-item" data-category="{{ service.category.id }}">
+                                {{ service.name }} - {{ service.category.name }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
                 <div class="collapse" id="dashboardSubmenu">
                   <!-- Menu Dashboard content wrapper-->
                 </div>
@@ -68,7 +92,7 @@
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal Add Specialist -->
     <div class="modal fade" id="addSpecialistModal" tabindex="-1" aria-labelledby="addSpecialistModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -86,6 +110,7 @@
             </div>
         </div>
     </div>
+
 
     <script src="{% static 'assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'js/scripts.js' %}" onload="console.log('scripts.js loaded successfully');" onerror="console.log('Failed to load scripts.js');"></script>

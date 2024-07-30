@@ -18,10 +18,40 @@ class Specialist(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='specialists')
     email = models.EmailField()
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    work_schedule = models.JSONField(null=True, blank=True)
+    photo = models.ImageField(upload_to='specialists_photos/', null=True, blank=True)
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
 
     def __str__(self):
         return self.name
 
+    def is_available(self, date, start_time, end_time):
+        # Логика проверки доступности специалиста
+        pass
+
+class ServiceCategory(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='service_categories')
+
+    def __str__(self):
+        return self.name
+
+class Service(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    duration = models.DurationField()
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    category = models.ForeignKey(ServiceCategory, on_delete=models.CASCADE, related_name='services')
+    specialists = models.ManyToManyField('Specialist', related_name='services')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='services')
+
+    def __str__(self):
+        return self.name
+
+    def get_end_time(self, start_time):
+        return start_time + self.duration
+    
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -37,7 +67,6 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(email, password, **extra_fields)
     
-
 class User(AbstractBaseUser, PermissionsMixin):
     ROLES = [
         ('MasterAdmin', 'Master Admin'),
@@ -76,7 +105,6 @@ class UserCompanyRole(models.Model):
     def __str__(self):
         return f"{self.user.email} - {self.company.name} ({self.role})"
     
-
 class Event(models.Model):
     specialist = models.ForeignKey(Specialist, on_delete=models.CASCADE, related_name='events')
     title = models.CharField(max_length=255)
@@ -86,6 +114,7 @@ class Event(models.Model):
     def __str__(self):
         return self.title
 
+#---------------------------------
 class Bot(models.Model):
     name = models.CharField(max_length=100)
     token = models.CharField(max_length=200)

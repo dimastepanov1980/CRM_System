@@ -1,0 +1,170 @@
+{% extends 'core/base.html' %}
+
+{% block title %}All Services{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>All Services Category</h1>
+    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addServiceModal">Add Service</button>
+
+    <!-- Скрытое поле для CSRF-токена -->
+    <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+
+    <div class="accordion" id="servicesAccordion">
+        {% for category in categories %}
+            <div class="accordion-item">
+                <h2 class="accordion-header d-flex justify-content-between align-items-center" id="heading{{ category.id }}">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ category.id }}" aria-expanded="true" aria-controls="collapse{{ category.id }}">
+                        {{ category.name }}
+                    </button>
+                    <!-- Иконка с выпадающим меню -->
+                    <div class="dropdown">
+                        <button class="btn btn-link dropdown-toggle" type="button" id="dropdownMenuButton{{ category.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton{{ category.id }}">
+                            <li><a class="dropdown-item" href="#" onclick="editCategory('{{ category.id }}')">Edit</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="deleteCategory('{{ category.id }}')">Delete</a></li>
+                        </ul>
+                    </div>
+                </h2>
+                <div id="collapse{{ category.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ category.id }}" data-bs-parent="#servicesAccordion">
+                    <div class="accordion-body">
+                        <ul class="list-group">
+                            {% for service in services %}
+                                {% if service.category.id == category.id %}
+                                    <li class="list-group-item">{{ service.name }} - {{ service.description }} ({{ service.duration }} minutes, ${{ service.price }})</li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Модальное окно для редактирования категории -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCategoryModalLabel">Edit Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editCategoryForm" method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="editCategoryName" class="form-label">Category Name</label>
+                        <input type="text" class="form-control" id="editCategoryName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCategoryDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="editCategoryDescription" name="description" required></textarea>
+                    </div>
+                    <input type="hidden" id="editCategoryId" name="category_id">
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Add Service -->
+<div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addServiceModalLabel">Add Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addServiceForm" method="post" action="{% url 'add_service' %}">
+                    {% csrf_token %}
+                    {{ service_form.as_p }}
+                    <button class="btn btn-primary" type="submit">Add Service</button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addServiceCategoryModal">Add Category</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Add Service Category -->
+<div class="modal fade" id="addServiceCategoryModal" tabindex="-1" aria-labelledby="addServiceCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addServiceCategoryModalLabel">Add Service Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeCategoryModal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addServiceCategoryForm" method="post" action="{% url 'add_service_category' %}">
+                    {% csrf_token %}
+                    {{ service_category_form.as_p }}
+                    <button class="btn btn-primary" type="submit">Add Service Category</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const addServiceCategoryForm = document.getElementById('addServiceCategoryForm');
+        if (addServiceCategoryForm) {
+            addServiceCategoryForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+                const form = event.target;
+                const formData = new FormData(form);
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const newCategory = data.category;
+                        const categoryList = document.getElementById('servicesAccordion');
+                        const newCategoryHtml = `
+                            <div class="accordion-item">
+                                <h2 class="accordion-header d-flex justify-content-between align-items-center" id="heading${newCategory.id}">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${newCategory.id}" aria-expanded="true" aria-controls="collapse${newCategory.id}">
+                                        ${newCategory.name}
+                                    </button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-link dropdown-toggle" type="button" id="dropdownMenuButton${newCategory.id}" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton${newCategory.id}">
+                                            <li><a class="dropdown-item" href="#" onclick="editCategory(${newCategory.id})">Edit</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="deleteCategory(${newCategory.id})">Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </h2>
+                                <div id="collapse${newCategory.id}" class="accordion-collapse collapse" aria-labelledby="heading${newCategory.id}" data-bs-parent="#servicesAccordion">
+                                    <div class="accordion-body">
+                                        <ul class="list-group">
+                                            <!-- Список услуг для этой категории -->
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        categoryList.insertAdjacentHTML('beforeend', newCategoryHtml);
+                        new bootstrap.Modal(document.getElementById('addServiceCategoryModal')).hide();
+                    } else {
+                        alert('Error: ' + data.errors);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('There was a problem adding the service category.');
+                });
+            });
+        }
+    });
+</script>

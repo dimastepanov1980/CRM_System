@@ -1,0 +1,23 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Edit Service Category{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Edit Service Category</h1>
+    
+    <form id="editCategoryForm" method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="editCategoryName" class="form-label">Category Name</label>
+            <input type="text" class="form-control" id="editCategoryName" name="name" value="{{ form.name.value }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="editCategoryDescription" class="form-label">Description</label>
+            <textarea class="form-control" id="editCategoryDescription" name="description" required>{{ form.description.value }}</textarea>
+        </div>
+        <input type="hidden" id="editCategoryId" name="category_id" value="{{ category.id }}">
+        <button type="submit" class="btn btn-primary">Save changes</button>
+    </form>
+</div>
+{% endblock %}

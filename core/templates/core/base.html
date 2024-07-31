@@ -36,9 +36,12 @@
                 <div class="collapse" id="staffSubmenu">
                     <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addSpecialistModal">Add Specialist</button>
                     <ul class="list-group" id="specialist-list">
+                        <li class="list-group-item">
+                            <a href="{% url 'specialist_list' %}">All Specialists</a>
+                        </li>
                         {% for specialist in specialists %}
                             <li class="list-group-item">
-                                <a href="#" class="view-schedule-link" data-uuid="{{ specialist.uuid }}">
+                                <a href="{% url 'specialist_list' %}?uuid={{ specialist.uuid }}" class="specialist-link">
                                     {{ specialist.name }} - {{ specialist.specialization }}
                                 </a>
                             </li>

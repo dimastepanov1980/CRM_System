@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    
 
     // Add new specialist
     const addSpecialistForm = document.getElementById('addSpecialistForm');
@@ -184,40 +185,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     
         const specialistList = document.getElementById('specialist-list');
-        if (specialistList) {
-            specialistList.addEventListener('click', function(event) {
-                if (event.target.classList.contains('view-schedule-link')) {
-                    event.preventDefault();
-                    const uuid = event.target.getAttribute('data-uuid');
+        const urlParams = new URLSearchParams(window.location.search);
+        const uuid = urlParams.get('uuid');
     
-                    console.log(`Fetching details for specialist with UUID: ${uuid}`);
-                    
-                    fetch(`/specialist/${uuid}/detail/`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok ' + response.statusText);
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            const specialistDetailContainer = document.getElementById('specialist-detail-container');
-                            specialistDetailContainer.innerHTML = `
-                                <h2>${data.name}</h2>
-                                <p><strong>Specialization:</strong> ${data.specialization}</p>
-                                <p><strong>Description:</strong> ${data.description}</p>
-                                <p><strong>Experience:</strong> ${data.experience} years</p>
-                                <input type="hidden" id="specialist-id" value="${data.specialist_id}">
-                            `;
-                            updateCalendar(data.events, data.specialist_id);
-                        })
-                        .catch(error => {
-                            console.error('There was a problem with the fetch operation:', error);
-                            alert('Failed to fetch specialist details. Please try again later.');
-                        });
-                }
-            });
-        }     
-
+        if (uuid) {
+            fetch(`/specialist/${uuid}/detail/`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const specialistDetailContainer = document.getElementById('specialist-detail-container');
+                    specialistDetailContainer.innerHTML = `
+                        <h2>${data.name}</h2>
+                        <p><strong>Specialization:</strong> ${data.specialization}</p>
+                        <p><strong>Description:</strong> ${data.description}</p>
+                        <p><strong>Experience:</strong> ${data.experience} years</p>
+                        <input type="hidden" id="specialist-id" value="${data.specialist_id}">
+                    `;
+                    updateCalendar(data.events, data.specialist_id);
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                    alert('Failed to fetch specialist details. Please try again later.');
+                });
+        }
+        
+        
         const editCategoryForm = document.getElementById('editCategoryForm');
         if (editCategoryForm) {
             editCategoryForm.addEventListener('submit', function(event) {

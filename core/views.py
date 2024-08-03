@@ -114,6 +114,19 @@ def specialist_list_view(request):
         'specialists': specialists, 'form': form
         })
 
+
+@login_required
+def get_specialist_events(request, specialist_id):
+    specialist = get_object_or_404(Specialist, id=specialist_id)
+    events = Event.objects.filter(specialist=specialist)
+    events_data = [{
+        'id': event.id,
+        'title': event.title,
+        'start': event.start.isoformat(),
+        'end': event.end.isoformat() if event.end else None,
+    } for event in events]
+    return JsonResponse({'events': events_data})
+
 @login_required
 def add_service_view(request):
     if request.method == 'POST':
@@ -157,6 +170,7 @@ def services_list_view(request):
         'service_form': service_form,
         'service_category_form': service_category_form,
     })
+
 
 @login_required
 def add_service_category_view(request):
@@ -259,6 +273,7 @@ def specialist_detail_view(request, uuid):
     events_data = []
     for event in events:
         events_data.append({
+            'id': event.id,  # Добавляем ID события
             'title': event.title,
             'start': event.start.isoformat(),
             'end': event.end.isoformat(),
@@ -302,22 +317,12 @@ def add_specialist_view(request):
 
 
 @login_required
-def get_user_events(request, specialist_uuid):
-    specialist = get_object_or_404(Specialist, uuid=specialist_uuid)
-    events = Event.objects.filter(specialist=specialist)
-    events_data = [{
-        'title': event.title,
-        'start': event.start.isoformat(),
-        'end': event.end.isoformat(),
-    } for event in events]
-    return JsonResponse(events_data, safe=False)
-
-@login_required
 def all_events_view(request):
     events = Event.objects.all().values('title', 'start', 'end', 'specialist_id')
     return JsonResponse(list(events), safe=False)
 
 @login_required
+@csrf_exempt
 def add_event_view(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -325,46 +330,59 @@ def add_event_view(request):
         start = data.get('start')
         end = data.get('end')
         specialist_id = data.get('specialist_id')
-        logger.debug(f"add event for specialist with UUID: {specialist_id}")
-
+ 
         specialist = get_object_or_404(Specialist, id=specialist_id)
         event = Event.objects.create(title=title, start=start, end=end, specialist=specialist)
-        return JsonResponse({'success': True, 'id': event.id})
+        return JsonResponse({'success': True, 'id': event.id})  # Убедитесь, что ID возвращается
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
-    
 
 @login_required
+@csrf_exempt
 def update_event_view(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         event_id = data.get('id')
-        title = data.get('title')
         start = data.get('start')
         end = data.get('end')
+        title = data.get('title')
+        specialist_id = data.get('specialist_id')
 
-        event = get_object_or_404(Event, id=event_id, user=request.user)
+        specialist = get_object_or_404(Specialist, id=specialist_id)
+        event = get_object_or_404(Event, id=event_id, specialist=specialist)
         if event:
             event.title = title
             event.start = start
             event.end = end
+            event.specialist_id = specialist_id
             event.save()
-            return JsonResponse({'success': True})
+            
+            return JsonResponse({'success': True, 'id': event.id})
         else:
-            return HttpResponseBadRequest('Event not found')
+            return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
 
 @login_required
 def remove_event_view(request):
-    if request.method == 'POST':
+     if request.method == 'POST':
         data = json.loads(request.body)
         event_id = data.get('id')
+        start = data.get('start')
+        end = data.get('end')
+        title = data.get('title')
+        specialist_id = data.get('specialist_id')
 
-        event = get_object_or_404(Event, id=event_id, user=request.user)
+        specialist = get_object_or_404(Specialist, id=specialist_id)
+        event = get_object_or_404(Event, id=event_id, specialist=specialist)
         if event:
+            event.title = title
+            event.start = start
+            event.end = end
+            event.specialist_id = specialist_id
             event.delete()
-            return JsonResponse({'success': True})
+            
+            return JsonResponse({'success': True, 'id': event.id})
         else:
-            return HttpResponseBadRequest('Event not found')
+            return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
 
 #---------------------------------------------------------------------------------------------------------------------------
 

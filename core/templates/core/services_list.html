@@ -1,5 +1,6 @@
 {% extends 'core/base.html' %}
 {% load static %}
+
 {% block title %}Services{% endblock %}
 
 {% block content %}
@@ -39,6 +40,7 @@
                                         <th style="width: 30%">Description</th>
                                         <th style="width: 20%">Duration</th>
                                         <th style="width: 10%">Price</th>
+                                        <th style="width: 20%">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -50,6 +52,17 @@
                                         <td>{{ service.description }}</td>
                                         <td>{{ service.duration }} minutes</td>
                                         <td>${{ service.price }}</td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-link dropdown-toggle" type="button" id="dropdownMenuButton{{ service.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton{{ service.id }}">
+                                                    <li><a class="dropdown-item" href="#" onclick="editService('{{ service.id }}')">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="deleteService('{{ service.id }}')">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
                                     </tr>
                                     {% endif %}
                                     {% endfor %}
@@ -83,6 +96,22 @@
         </div>
     </div>
 </div>
+
+<!-- Модальное окно для редактирования услуги -->
+<div class="modal fade" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editServiceModalLabel">Edit Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="editServiceModalBody">
+                <!-- Здесь будет динамически вставляться содержимое формы -->
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <!-- Модальное окно для добавления категории услуги -->
 <div class="modal fade" id="addServiceCategoryModal" tabindex="-1" aria-labelledby="addServiceCategoryModalLabel" aria-hidden="true">
@@ -130,5 +159,6 @@
     </div>
 </div>
 
-{% endblock %}
 
+
+{% endblock %}

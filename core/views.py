@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth import login, logout
+from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 from django.views.generic import ListView, CreateView, UpdateView, DetailView
 from django.http import JsonResponse, HttpResponseBadRequest
@@ -138,7 +139,7 @@ def services_list_view(request):
 def edit_service_view(request, service_id):
     service = get_object_or_404(Service, id=service_id)
     if request.method == 'POST':
-        form = ServiceForm(request.POST, instance=service)
+        form = ServiceForm(request.POST, instance=service, company=request.user.companies.first())
         if form.is_valid():
             form.save()
             return JsonResponse({
@@ -154,8 +155,9 @@ def edit_service_view(request, service_id):
         else:
             return JsonResponse({'success': False, 'errors': form.errors})
     else:
-        form = ServiceForm(instance=service)
+        form = ServiceForm(instance=service, company=request.user.companies.first())
         return render(request, 'core/edit_service.html', {'form': form, 'service': service})
+    
 
 @csrf_exempt
 @login_required

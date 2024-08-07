@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     // Логика для добавления категории услуг
     const addServiceCategoryForm = document.getElementById('addServiceCategoryForm');
@@ -99,76 +99,39 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Логика для редактирования услуги
-    const editServiceModal = new bootstrap.Modal(document.getElementById('editServiceModal'));
-    const editServiceForm = document.getElementById('editServiceForm');
+   // Логика для редактирования услуги
+   const editServiceForm = document.getElementById('editServiceForm');
+   if (editServiceForm) {
+       editServiceForm.addEventListener('submit', function (event) {
+           event.preventDefault();
+           const formData = new FormData(editServiceForm);
+           const serviceId = editServiceForm.getAttribute('data-service-id');
 
-    function editService(serviceId) {
-        fetch(`/edit_service/${serviceId}/`, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('editServiceModalBody').innerHTML = data.form_html;
-            editServiceModal.show();
-        });
-    }
+           fetch(`/edit_service/${serviceId}/`, {
+               method: 'POST',
+               headers: {
+                   'X-Requested-With': 'XMLHttpRequest',
+                   'X-CSRFToken': csrfToken,
+               },
+               body: formData,
+           })
+           .then(response => response.json())
+           .then(data => {
+               if (data.success) {
+                   alert('Service updated successfully');
+                   location.reload();
+               } else {
+                   alert('Error: ' + JSON.stringify(data.errors));
+               }
+           })
+           .catch(error => {
+               console.error('Error:', error);
+               alert('There was a problem editing the service.');
+           });
+       });
+   }
 
-    if (editServiceForm) {
-        editServiceForm.addEventListener('submit', function (event) {
-            event.preventDefault();
-            const formData = new FormData(editServiceForm);
-            const serviceId = editServiceForm.getAttribute('data-service-id');
 
-            fetch(`/edit_service/${serviceId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': csrfToken,
-                },
-                body: formData,
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error: ' + JSON.stringify(data.errors));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('There was a problem editing the service.');
-            });
-        });
-    }
-
-    // Логика для удаления услуги
-    function deleteService(serviceId) {
-        if (confirm('Are you sure you want to delete this service?')) {
-            fetch(`/delete_service/${serviceId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': csrfToken,
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('There was a problem deleting the service.');
-            });
-        }
-    }
 
     // Привязка кнопок редактирования и удаления к функциям
     document.querySelectorAll('.edit-service-btn').forEach(button => {
@@ -212,27 +175,116 @@ function editCategory(categoryId) {
         .catch(error => console.error('Error fetching category:', error));
 }
 
-function deleteCategory(categoryId) {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    function deleteCategory(categoryId) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    if (confirm('Are you sure you want to delete this category?')) {
-        fetch(`/delete_category/${categoryId}/`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRFToken': csrfToken
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();  // Перезагрузка страницы для обновления данных
-            } else {
-                alert('Error: ' + data.errors);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('There was a problem deleting the category.');
-        });
+        if (confirm('Are you sure you want to delete this category?')) {
+            fetch(`/delete_category/${categoryId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();  // Перезагрузка страницы для обновления данных
+                } else {
+                    alert('Error: ' + data.errors);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was a problem deleting the category.');
+            });
+        }
     }
-}
+
+    // Логика для редактирования услуги
+    function editService(serviceId) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        fetch(`/edit_service/${serviceId}/`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
+        .then(response => response.text())
+        .then(html => {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+
+            const form = tempDiv.querySelector('form');
+            const modalBody = document.getElementById('editServiceModalBody');
+            if (modalBody && form) {
+                modalBody.innerHTML = form.outerHTML; // Вставляем полную форму
+
+                // Установите атрибут data-service-id
+                const editServiceForm = document.getElementById('editServiceForm');
+                if (editServiceForm) {
+                    editServiceForm.setAttribute('data-service-id', serviceId);
+
+                    // Добавляем обработчик события для сохранения изменений
+                    editServiceForm.addEventListener('submit', function (event) {
+                        event.preventDefault();
+                        const formData = new FormData(editServiceForm);
+
+                        fetch(`/edit_service/${serviceId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRFToken': csrfToken,
+                            },
+                            body: formData,
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Service updated successfully');
+                                location.reload();
+                            } else {
+                                alert('Error: ' + JSON.stringify(data.errors));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('There was a problem editing the service.');
+                        });
+                    });
+                } else {
+                    console.error('Error: editServiceForm not found after inserting HTML');
+                }
+
+                new bootstrap.Modal(document.getElementById('editServiceModal')).show();
+            } else {
+                console.error('Error: modalBody or form not found');
+            }
+        })
+        .catch(error => console.error('Error fetching service:', error));
+    }
+
+
+    // Логика для удаления услуги
+    function deleteService(serviceId) {
+        if (confirm('Are you sure you want to delete this service?')) {
+            fetch(`/delete_service/${serviceId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Service deleted successfully');
+                    location.reload();
+                } else {
+                    alert('Error: ' + JSON.stringify(data.errors));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was a problem deleting the service.');
+            });
+        }
+    }

@@ -1,47 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Add Specialist - Сhatflow.bot</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800&amp;display=swap">
-    <link rel="stylesheet" href="{% static 'assets/css/style.css' %}">
-</head>
-<body>
-    <div class="d-flex" id="wrapper">
-        <!-- Sidebar-->
-        <div class="border-end bg-white" id="sidebar-wrapper">
-            <div class="sidebar-heading border-bottom bg-light">chatflow</div>
-            <div class="list-group list-group-flush">
-                <a class="list-group-item list-group-item-action list-group-item-light p-3" href="#staffSubmenu" data-bs-toggle="collapse" aria-expanded="false">Staff</a>
-                <div class="collapse" id="staffSubmenu">
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'add_specialist' %}">Add Specialist</a>
-                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="{% url 'specialist_list' %}">View Specialists</a>
-                </div>
-            </div>
-        </div>
-        <!-- Page content wrapper-->
-        <div id="page-content-wrapper">
-            <!-- Top navigation-->
-            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
-                <div class="container-fluid">
-                    <button class="btn btn-primary" id="sidebarToggle">Toggle Menu</button>
-                </div>
-            </nav>
-            <!-- Page content-->
-            <div class="container-fluid">
-                <h1 class="mt-4">Add Specialist</h1>
-                <form method="post">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <button class="btn btn-primary" type="submit">Add Specialist</button>
-                </form>
-            </div>
-        </div>
-    </div>
-    <script src="{% static 'assets/bootstrap/js/bootstrap.min.js' %}"></script>
-    <script src="{% static 'js/scripts.js' %}"></script>
-</body>
-</html>
+{% extends 'core/base.html' %}
+
+{% block title %}Add Specialist{% endblock %}
+
+{% block content %}
+<h1>Add Specialist</h1>
+<form id="addSpecialistForm" method="post" action="{% url 'add_specialist' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-primary" type="submit">Add Specialist</button>
+</form>
+{% endblock %}

@@ -1,18 +1,89 @@
 {% extends 'core/base.html' %}
+{% load static %}
 
-{% block title %}Specialist Details{% endblock %}
+{% block title %}Specialists{% endblock %}
 
 {% block content %}
-<h1>Specialist Details</h1>
-
-<div id="specialist-detail-container">
-    <p>Select a specialist from the list to view details.</p>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Specialists ({{ specialists|length }})</h1>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSpecialistModal">Add Specialist</button>
 </div>
 
-<h2>Calendar</h2>
-<div id="calendar" style="width:100% !important"></div>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Staff name</th>
+            <th>Schedule until</th>
+            <th>Available</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for specialist in specialists %}
+        <tr class="align-middle">
+            <!-- Столбец с иконкой фото мастера -->
+            <td>
+                <div class="user-block">
+                    {% if specialist.photo %}
+                    <img class="img-circle img-bordered-sm" src="{{ specialist.photo.url }}" alt="{{ specialist.name }}">
+                    {% else %}
+                    <img class="img-circle img-bordered-sm" src="{% static '/assets/img/icon/person-circle.svg' %}">
+                    {% endif %}
+                    <span class="username">
+                        <a href="{% url 'specialist_detail' specialist.uuid %}" class="view-schedule-link" data-uuid="{{ specialist.uuid }}"> {{ specialist.name }} </a>
+                    </span>
+                    <span class="description">{{ specialist.specialization }}</span>
+                </div>
+            </td>
 
-<!-- Скрытое поле для CSRF-токена -->
-<input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+            <!-- Столбец с расписанием до -->
+            <td>{{ specialist.work_schedule }}</td>
+
+            <!-- Столбец с переключателем активный / не активный -->
+            <td>
+                <div class="custom-switch custom-switch-label-onoff custom-switch-xs pl-0">
+                    <input class="custom-switch-input" type="checkbox" id="activeSwitch{{ specialist.id }}" {% if specialist.is_active %}checked{% endif %}>
+                    <label class="custom-switch-btn" for="activeSwitch{{ specialist.id }}"></label>
+                </div>
+            </td>
+
+            <!-- Столбец с иконкой и выпадающим меню -->
+            <td>
+                <div class="dropdown">
+                    <button class="btn dropdown-toggle" id="dropdownMenuButton{{ specialist.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                        ...
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ specialist.id }}">
+                        <li><a class="dropdown-item" href="{% url 'specialist_edit' specialist.id %}">Редактировать</a></li>
+                        <li><a class="dropdown-item" href="{% url 'specialist_delete' specialist.id %}">Удалить</a></li>
+                    </ul>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+
+<div class="modal fade" id="addSpecialistModal" tabindex="-1" aria-labelledby="addSpecialistModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSpecialistModalLabel">Add Specialist</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addSpecialistForm" method="post" action="{% url 'add_specialist' %}">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button class="btn btn-primary" type="submit">Add Specialist</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 {% endblock %}
+<script src="{% static 'js/stuff.js' %}"></script>

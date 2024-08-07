@@ -87,45 +87,8 @@ def admin_dashboard_view(request):
         'form': specialist_form
     })
 
-@login_required
-def specialist_list_view(request):
-    user = request.user
-    company = Company.objects.get(owner=user)
-    specialists = Specialist.objects.filter(company=company)
-    form = SpecialistForm()
-    logger.debug(f"Fetching specialist list for company: {specialists} {company}")
-
-    if request.method == 'POST':
-        form = SpecialistForm(request.POST)
-        if form.is_valid():
-            specialist = form.save()
-            return JsonResponse({
-                'success': True,
-                'specialist': {
-                    'uuid': specialist.uuid,
-                    'name': specialist.name,
-                    'specialization': specialist.specialization
-                }
-            })
-        else:
-            return JsonResponse({'success': False, 'errors': form.errors})
-
-    return render(request, 'core/specialist_list.html', {
-        'specialists': specialists, 'form': form
-        })
-
-
-@login_required
-def get_specialist_events(request, specialist_id):
-    specialist = get_object_or_404(Specialist, id=specialist_id)
-    events = Event.objects.filter(specialist=specialist)
-    events_data = [{
-        'id': event.id,
-        'title': event.title,
-        'start': event.start.isoformat(),
-        'end': event.end.isoformat() if event.end else None,
-    } for event in events]
-    return JsonResponse({'events': events_data})
+# -------------------------------------------------
+# ------------- < Servises > ----------------------
 
 @login_required
 def add_service_view(request):
@@ -160,7 +123,7 @@ def services_list_view(request):
     company = Company.objects.get(owner=user)
     
     services = Service.objects.filter(company=company)
-    categories = ServiceCategory.objects.all()
+    categories = ServiceCategory.objects.filter(company=company)
     service_form = ServiceForm()
     service_category_form = ServiceCategoryForm()
 
@@ -171,6 +134,41 @@ def services_list_view(request):
         'service_category_form': service_category_form,
     })
 
+@login_required
+def edit_service_view(request, service_id):
+    service = get_object_or_404(Service, id=service_id)
+    if request.method == 'POST':
+        form = ServiceForm(request.POST, instance=service)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({
+                'success': True,
+                'service': {
+                    'id': service.id,
+                    'name': service.name,
+                    'description': service.description,
+                    'duration': service.duration,
+                    'price': service.price,
+                }
+            })
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors})
+    else:
+        form = ServiceForm(instance=service)
+        return render(request, 'core/edit_service.html', {'form': form, 'service': service})
+
+@csrf_exempt
+@login_required
+def delete_service_view(request, id):
+    if request.method == 'POST':
+        service = get_object_or_404(Service, id=id)
+        service.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+# ------------- ^ Servises End ^ -------------------
+# --------------------------------------------------
+# --------------------------------------------------
+# ------------- < Servises Category > --------------
 
 @login_required
 def add_service_category_view(request):
@@ -213,7 +211,7 @@ def get_category_view(request, category_id):
 def delete_service_category_view(request, category_id):
     category = get_object_or_404(ServiceCategory, id=category_id)
     category.delete()
-    return HttpResponse(status=204)
+    return JsonResponse({'success': True})
 
 @login_required
 def edit_category_view(request, category_id):
@@ -235,10 +233,84 @@ def edit_category_view(request, category_id):
         form = ServiceCategoryForm(instance=category)
         return render(request, 'core/edit_service_category.html', {'form': form, 'category': category})
     
-def specialist_schedule_view(request, uuid):
+# ------------- ^ Servises Category End ^ -------------
+# -----------------------------------------------------
+# -----------------------------------------------------
+# ------------- < Specialist  > -----------------------
+
+@login_required
+def specialist_detail_view(request, uuid):
+    logger.debug(f"Fetching details for specialist with UUID: {uuid}")
     specialist = get_object_or_404(Specialist, uuid=uuid)
-    # Здесь вы можете добавить логику для получения расписания специалиста
-    return render(request, 'core/specialist_schedule.html', {'specialist': specialist})
+    events = Event.objects.filter(specialist=specialist)
+    events_data = []
+    for event in events:
+        events_data.append({
+            'id': event.id,
+            'title': event.title,
+            'start': event.start.isoformat(),
+            'end': event.end.isoformat(),
+        })
+
+    return render(request, 'core/specialist_detail.html', {
+        'specialist': specialist,
+        'events': events_data
+    })  
+
+@csrf_exempt
+@login_required
+def specialist_add_view(request):
+    company = request.user.companies.first()
+    if request.method == 'POST':
+        form = SpecialistForm(request.POST, request.FILES)
+        if form.is_valid():
+            specialist = form.save(commit=False)
+            specialist.company = company  # Присваиваем компанию перед сохранением
+            specialist.save()
+            form.save_m2m()  # Сохранение Many-to-Many связей
+            for service in form.cleaned_data['services']:
+                service.specialists.add(specialist)  # Обновление связи у услуги
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'specialist': {
+                        'name': specialist.name,
+                        'specialization': specialist.specialization,
+                        'uuid': str(specialist.uuid),
+                    }
+                })
+            return redirect('specialist_list')
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'errors': form.errors})
+    else:
+        form = SpecialistForm()
+    return render(request, 'core/add_specialist.html', {'form': form})
+
+@login_required
+def specialist_edit_view(request, id):
+    specialist = get_object_or_404(Specialist, id=id)
+    company = request.user.companies.first()
+    if request.method == 'POST':
+        form = SpecialistForm(request.POST, request.FILES, instance=specialist)
+        if form.is_valid():
+            form.save()
+            for service in Service.objects.filter(company=company):
+                service.specialists.remove(specialist)  # Удаление всех текущих связей
+            for service in form.cleaned_data['services']:
+                service.specialists.add(specialist)  # Добавление новых связей
+            return redirect('specialist_list')
+    else:
+        form = SpecialistForm(instance=specialist)
+    return render(request, 'core/specialist_edit.html', {'form': form, 'specialist': specialist})
+
+@login_required
+def specialist_delete_view(request, id):
+    specialist = get_object_or_404(Specialist, id=id)
+    if request.method == 'POST':
+        specialist.delete()
+        return redirect('specialist_list')
+    return render(request, 'core/specialist_confirm_delete.html', {'specialist': specialist})
 
 @login_required
 def specialist_list_view(request):
@@ -265,61 +337,27 @@ def specialist_list_view(request):
 
     return render(request, 'core/specialist_list.html', {'specialists': specialists, 'form': form})
 
-@login_required
-def specialist_detail_view(request, uuid):
-    logger.debug(f"Fetching details for specialist with UUID: {uuid}")
-    specialist = get_object_or_404(Specialist, uuid=uuid)
-    events = Event.objects.filter(specialist=specialist)
-    events_data = []
-    for event in events:
-        events_data.append({
-            'id': event.id,  # Добавляем ID события
-            'title': event.title,
-            'start': event.start.isoformat(),
-            'end': event.end.isoformat(),
-        })
-
-    return JsonResponse({
-        'name': specialist.name,
-        'specialization': specialist.specialization,
-        'description': specialist.description,
-        'experience': specialist.experience,
-        'events': events_data,
-        'specialist_id': specialist.id, 
-    })
-
-@csrf_exempt
-@login_required
-def add_specialist_view(request):
-    if request.method == 'POST':
-        form = SpecialistForm(request.POST, request.FILES)
-        if form.is_valid():
-            specialist = form.save(commit=False)
-            specialist.company = request.user.companies.first()  # Присваиваем компанию перед сохранением
-            specialist.save()
-            form.save_m2m()  # Сохранение Many-to-Many связей
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': True,
-                    'specialist': {
-                        'name': specialist.name,
-                        'specialization': specialist.specialization,
-                        'uuid': str(specialist.uuid),
-                    }
-                })
-            return redirect('specialist_list')
-        else:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'errors': form.errors})
-    else:
-        form = SpecialistForm()
-    return render(request, 'core/add_specialist.html', {'form': form})
-
+# ------------- ^ Specialist End ^ --------------------
+# -----------------------------------------------------
+# -----------------------------------------------------
+# ------------- < Specialist Event  > -----------------
 
 @login_required
 def all_events_view(request):
     events = Event.objects.all().values('title', 'start', 'end', 'specialist_id')
     return JsonResponse(list(events), safe=False)
+
+@login_required
+def get_specialist_events(request, specialist_id):
+    specialist = get_object_or_404(Specialist, id=specialist_id)
+    events = Event.objects.filter(specialist=specialist)
+    events_data = [{
+        'id': event.id,
+        'title': event.title,
+        'start': event.start.isoformat(),
+        'end': event.end.isoformat() if event.end else None,
+    } for event in events]
+    return JsonResponse({'events': events_data})
 
 @login_required
 @csrf_exempt
@@ -383,6 +421,16 @@ def remove_event_view(request):
             return JsonResponse({'success': True, 'id': event.id})
         else:
             return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
+
+# ------------- ^ Specialist End ^ -----------------
+# -----------------------------------------------------
+
+
+
+def specialist_schedule_view(request, uuid):
+    specialist = get_object_or_404(Specialist, uuid=uuid)
+    # Здесь вы можете добавить логику для получения расписания специалиста
+    return render(request, 'core/specialist_schedule.html', {'specialist': specialist})
 
 #---------------------------------------------------------------------------------------------------------------------------
 

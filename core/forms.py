@@ -31,7 +31,6 @@ class RegistrationForm(UserCreationForm):
         company_name_latin = unidecode.unidecode(company_name)
         company_name_latin = company_name_latin.replace(" ", "-").lower()
         return company_name_latin
-
     
 class SpecialistForm(forms.ModelForm):
     services = forms.ModelMultipleChoiceField(
@@ -44,15 +43,20 @@ class SpecialistForm(forms.ModelForm):
         model = Specialist
         fields = ['name', 'specialization', 'description', 'experience', 'email', 'phone_number', 'work_schedule', 'photo', 'services']
         widgets = {
-            'work_schedule': forms.HiddenInput(),  # Скрытое поле, пока не используем
-            'photo': forms.ClearableFileInput(attrs={'class': 'form-control-file'})
+            'work_schedule': forms.HiddenInput(),
+            'photo': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
         }
-        
 
 class ServiceCategoryForm(forms.ModelForm):
     class Meta:
         model = ServiceCategory
-        fields = ['name', 'description']        
+        fields = ['name', 'description']
+
+    def __init__(self, *args, **kwargs):
+        company = kwargs.pop('company', None)
+        super(ServiceCategoryForm, self).__init__(*args, **kwargs)
+        if company:
+            self.fields['name'].queryset = ServiceCategory.objects.filter(company=company)
 
 class ServiceForm(forms.ModelForm):
     class Meta:
@@ -66,8 +70,13 @@ class ServiceForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        company = kwargs.pop('company', None)
         super(ServiceForm, self).__init__(*args, **kwargs)
-        self.fields['specialists'].required = False  # Установим поле specialists как необязательное
+        if company:
+            self.fields['category'].queryset = ServiceCategory.objects.filter(company=company)
+            self.fields['specialists'].queryset = Specialist.objects.filter(company=company)
+        self.fields['specialists'].required = False
+
 
 class LoginForm(AuthenticationForm):
     username = forms.EmailField(widget=forms.EmailInput(attrs={'autofocus': True}), label='Email')

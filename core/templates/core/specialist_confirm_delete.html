@@ -1,0 +1,13 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Delete Specialist{% endblock %}
+
+{% block content %}
+<h1>Delete Specialist</h1>
+<p>Are you sure you want to delete {{ specialist.name }}?</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a href="{% url 'specialist_list' %}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

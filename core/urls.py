@@ -1,6 +1,6 @@
 from django.urls import path
 from django.conf.urls import handler404, handler400
-from .views import admin_dashboard_view, specialist_list_view, get_specialist_events, get_category_view, edit_category_view, delete_service_category_view, add_event_view, services_list_view, add_service_view, add_service_category_view, all_events_view, update_event_view, remove_event_view, specialist_detail_view, add_specialist_view, login_view, register, bot_list_view, logout_view, custom_404_view, custom_400_view, home, BotCreateView, BotUpdateView, BotDetailView, message_list_view, user_list_view, webhook, AdminCreateView, AdminListView, AdminUpdateView
+from .views import admin_dashboard_view, specialist_list_view, get_specialist_events, get_category_view, edit_category_view, delete_service_category_view, add_event_view, services_list_view, add_service_view, edit_service_view, delete_service_view, add_service_category_view, all_events_view, update_event_view, remove_event_view, specialist_detail_view, specialist_add_view, specialist_edit_view, specialist_delete_view, login_view, register, bot_list_view, logout_view, custom_404_view, custom_400_view, home, BotCreateView, BotUpdateView, BotDetailView, message_list_view, user_list_view, webhook, AdminCreateView, AdminListView, AdminUpdateView
 
 
 urlpatterns = [
@@ -10,13 +10,19 @@ urlpatterns = [
     path('register/', register, name='register'),
  
     path('admin_dashboard/', admin_dashboard_view, name='admin_dashboard'),
+    
     path('specialists/', specialist_list_view, name='specialist_list'),
     path('specialist/<uuid:uuid>/detail/', specialist_detail_view, name='specialist_detail'),
-    path('add_specialist/', add_specialist_view, name='add_specialist'),
+    path('add_specialist/', specialist_add_view, name='add_specialist'),
+    path('specialist/<int:id>/edit/', specialist_edit_view, name='specialist_edit'),
+    path('specialist/<int:id>/delete/', specialist_delete_view, name='specialist_delete'),
+
 
     path('services/', services_list_view, name='services_list'),
     path('add_service_category/', add_service_category_view, name='add_service_category'),
     path('add_service/', add_service_view, name='add_service'),
+    path('edit_service/<int:id>/', edit_service_view, name='edit_service'),
+    path('delete_service/<int:id>/', delete_service_view, name='delete_service'),
     path('get_category/<int:category_id>/', get_category_view, name='get_category'),
     path('delete_category/<int:category_id>/', delete_service_category_view, name='delete_category'),
     path('edit_category/<int:category_id>/', edit_category_view, name='edit_category'),

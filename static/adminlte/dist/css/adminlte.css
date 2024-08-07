@@ -15448,4 +15448,49 @@ html.maximized-card {
   width: 32px;
 }
 
+
+.user-block {
+  float: left;
+}
+
+.user-block img {
+  float: left;
+  height: 40px;
+  width: 40px;
+}
+
+.user-block .username,
+.user-block .description,
+.user-block .comment {
+  display: block;
+  margin-left: 50px;
+}
+
+.user-block .username {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: -1px;
+}
+
+.user-block .description {
+  color: #6c757d;
+  font-size: 13px;
+  margin-top: -3px;
+}
+
+.user-block.user-block-sm img {
+  width: 1.875rem;
+  height: 1.875rem;
+}
+
+.user-block.user-block-sm .username,
+.user-block.user-block-sm .description,
+.user-block.user-block-sm .comment {
+  margin-left: 40px;
+}
+
+.user-block.user-block-sm .username {
+  font-size: 14px;
+}
+
 /*# sourceMappingURL=adminlte.css.map */

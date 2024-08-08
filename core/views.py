@@ -98,8 +98,10 @@ def add_service_view(request):
         if form.is_valid():
             service = form.save(commit=False)
             service.company = request.user.companies.first()
-            service.save()
-            form.save_m2m()  # Сохраняем Many-to-Many связи
+            service.save()  # Сначала сохраняем объект сервиса
+            form.save_m2m()  # Затем сохраняем связи Many-to-Many
+            for specialist in form.cleaned_data['specialists']:
+                specialist.services.add(service)  # Обновление связи у специалиста
             return JsonResponse({
                 'success': True,
                 'service': {
@@ -115,8 +117,9 @@ def add_service_view(request):
         else:
             return JsonResponse({'success': False, 'errors': form.errors})
     else:
-        form = ServiceForm()
+        form = ServiceForm(company=request.user.companies.first())
     return render(request, 'core/add_service.html', {'form': form})
+
 
 @login_required
 def services_list_view(request):
@@ -141,7 +144,18 @@ def edit_service_view(request, service_id):
     if request.method == 'POST':
         form = ServiceForm(request.POST, instance=service, company=request.user.companies.first())
         if form.is_valid():
-            form.save()
+            service = form.save(commit=False)
+            service.save()
+            form.save_m2m()
+
+            # Удаление всех текущих связей
+            for specialist in Specialist.objects.filter(company=request.user.companies.first()):
+                specialist.services.remove(service)
+
+            # Добавление новых связей
+            for specialist in form.cleaned_data['specialists']:
+                specialist.services.add(service)
+
             return JsonResponse({
                 'success': True,
                 'service': {
@@ -156,7 +170,7 @@ def edit_service_view(request, service_id):
             return JsonResponse({'success': False, 'errors': form.errors})
     else:
         form = ServiceForm(instance=service, company=request.user.companies.first())
-        return render(request, 'core/edit_service.html', {'form': form, 'service': service})
+    return render(request, 'core/edit_service.html', {'form': form, 'service': service})
     
 
 @csrf_exempt

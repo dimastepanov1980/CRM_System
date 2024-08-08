@@ -1,15 +1,6 @@
-{% extends 'core/base.html' %}
 
-{% block title %}Edit Service{% endblock %}
-
-{% block content %}
-<div class="container mt-4">
-    <h1>Edit Service</h1>
-    
-    <form id="editServiceForm" method="post" data-service-id="{{ service.id }}">
+    <form id="editServiceForm" method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit" class="btn btn-primary">Save changes</button>
     </form>
-</div>
-{% endblock %}

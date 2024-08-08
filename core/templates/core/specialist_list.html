@@ -84,6 +84,26 @@
     </div>
 </div>
 
+<!-- Модальное окно для редактирования специалиста -->
+<div class="modal fade" id="editSpecialistModal" tabindex="-1" aria-labelledby="editSpecialistModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSpecialistModalLabel">Edit Specialist</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="editSpecialistModalBody">
+                <form id="editSpecialistForm" method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <input type="hidden" id="editSpecialistId" name="specialist_id">
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
-<script src="{% static 'js/stuff.js' %}"></script>
+<script src="{% static 'js/specialist.js' %}"></script>
+

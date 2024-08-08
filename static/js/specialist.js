@@ -2,6 +2,56 @@ document.addEventListener('DOMContentLoaded', function() {
     const csrftoken = document.getElementById('csrf-token').value;
     const specialistId = document.getElementById('specialist-id').value;
 
+    // Логика для добавления специаилста
+    const addSpecialistForm = document.getElementById('addSpecialistForm');
+    if (addSpecialistForm) {
+        addSpecialistForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(addSpecialistForm);
+            fetch(addSpecialistForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Add new specialist to the list
+                    const newSpecialist = document.createElement('li');
+                    newSpecialist.className = 'list-group-item';
+                    newSpecialist.innerHTML = `
+                        <a href="#" class="view-schedule-link" data-uuid="${data.specialist.uuid}">
+                            ${data.specialist.name} - ${data.specialist.specialization}
+                        </a>
+                    `;
+                    const specialistList = document.getElementById('specialist-list');
+                    if (specialistList) {
+                        specialistList.appendChild(newSpecialist);
+                    }
+
+                    // Close the modal
+                    const addSpecialistModal = document.getElementById('addSpecialistModal');
+                    const modal = bootstrap.Modal.getInstance(addSpecialistModal);
+                    modal.hide();
+
+                    // Reset the form
+                    addSpecialistForm.reset();
+
+                    // Redirect to specialist list
+                    window.location.href = '/specialists/';
+                } else {
+                    // Handle form errors
+                    alert('There was an error adding the specialist.');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
+
+    // Логика для добавления евента в календарь специаилста
     function updateCalendar(specialistId) {
         var calendarEl = document.getElementById('calendar');
 
@@ -133,6 +183,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
         calendar.render();
     }
-
     updateCalendar(specialistId);
 });

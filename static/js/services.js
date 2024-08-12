@@ -299,7 +299,8 @@ function deleteService(serviceId) {
                 alert('Service deleted successfully');
                 location.reload();
             } else {
-                alert('Error: ' + JSON.stringify(data.errors));
+                console.error('Error delete Service:', error);
+                alert('Error: ' + data.errors);
             }
         })
         .catch(error => {

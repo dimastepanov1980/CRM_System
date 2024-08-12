@@ -120,7 +120,6 @@ def add_service_view(request):
         form = ServiceForm(company=request.user.companies.first())
     return render(request, 'core/add_service.html', {'form': form})
 
-
 @login_required
 def services_list_view(request):
     user = request.user
@@ -172,15 +171,12 @@ def edit_service_view(request, service_id):
         form = ServiceForm(instance=service, company=request.user.companies.first())
     return render(request, 'core/edit_service.html', {'form': form, 'service': service})
     
-
-@csrf_exempt
 @login_required
+@require_http_methods(["DELETE"])
 def delete_service_view(request, id):
-    if request.method == 'POST':
-        service = get_object_or_404(Service, id=id)
-        service.delete()
-        return JsonResponse({'success': True})
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    service = get_object_or_404(Service, id=id)
+    service.delete()
+    return JsonResponse({'success': True})
 # ------------- ^ Servises End ^ -------------------
 # --------------------------------------------------
 # --------------------------------------------------

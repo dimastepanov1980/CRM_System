@@ -1,7 +1,7 @@
 import unidecode
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import Bot, User, Specialist, ServiceCategory, Service
+from .models import Bot, User, Specialist, ServiceCategory, Service, Event
 
 class BotForm(forms.ModelForm):
     class Meta:
@@ -77,6 +77,16 @@ class ServiceForm(forms.ModelForm):
             self.fields['specialists'].queryset = Specialist.objects.filter(company=company)
         self.fields['specialists'].required = False
 
+class EventForm(forms.ModelForm):
+    class Meta:
+        model = Event
+        fields = ['title', 'start', 'end', 'specialist', 'service']
+        
+    def __init__(self, *args, **kwargs):
+        specialist = kwargs.pop('specialist', None)
+        super(EventForm, self).__init__(*args, **kwargs)
+        if specialist:
+            self.fields['service'].queryset = specialist.service_specialists.all()
 
 class LoginForm(AuthenticationForm):
     username = forms.EmailField(widget=forms.EmailInput(attrs={'autofocus': True}), label='Email')

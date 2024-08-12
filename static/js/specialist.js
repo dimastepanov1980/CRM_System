@@ -54,7 +54,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Логика для добавления евента в календарь специаилста
     function updateCalendar(specialistId) {
         var calendarEl = document.getElementById('calendar');
-
         var calendar = new FullCalendar.Calendar(calendarEl, {
             headerToolbar: {
                 left: 'prev,next today',
@@ -81,29 +80,88 @@ document.addEventListener('DOMContentLoaded', function() {
             selectable: true,
             editable: true,
             select: function({ start, end, allDay }) {
-                var title = prompt("Enter Event Title");
-                if (title) {
-                    fetch('/add_event/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': csrftoken
-                        },
-                        body: JSON.stringify({'title': title, 'start': start, 'end': end, 'specialist_id': specialistId})
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            calendar.refetchEvents(); // Обновление событий после добавления
-                        } else {
-                            alert('Error: ' + data.error);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error adding event:', error);
-                        alert('There is a problem!!!');
-                    });
-                }
+                // Запрос на получение доступных услуг для данного специалиста
+                fetch(`/specialist/${specialistId}/available_services/`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Обработка полученного списка услуг
+                        let services = data.services;
+                        let select = document.getElementById('serviceSelect');
+                        select.innerHTML = ''; // Очищаем существующие опции
+                        services.forEach(service => {
+                            let option = document.createElement('option');
+                            option.value = service.id;
+                            option.textContent = service.name;
+                            select.appendChild(option);
+                        });
+                    } else {
+                        console.error('Error:', data.error);
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching services:', error);
+                    alert('There was a problem fetching the services.');
+                });
+    
+                // Открываем модальное окно
+                var eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+                eventModal.show();
+
+                // Обработка добавления события при нажатии на кнопку "Добавить событие"
+                document.getElementById('addEventBtn').onclick = function() {
+                    var selectedService = document.getElementById('serviceSelect').value;
+                    var title = document.getElementById('eventTitle').value;
+                    var start = document.getElementById('eventStart').value;
+                    var end = document.getElementById('eventEnd').value;
+                
+                    if (selectedService && title && start && end) {
+                        fetch('/add_event/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrftoken
+                            },
+                            body: JSON.stringify({
+                                'title': title,
+                                'start': start,
+                                'end': end,
+                                'specialist_id': specialistId,
+                                'service_id': selectedService
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('getting data from modal:',
+                                'title', title,
+                                'start', start,
+                                'end', end,
+                                'specialist_id', specialistId,
+                                'service_id', selectedService);
+                            if (data.success) {
+                                calendar.refetchEvents(); // Обновление событий после добавления
+                                eventModal.hide(); // Закрываем модальное окно после успешного добавления
+                            } else {
+                                console.error('Error add event:', data, data.error);
+                                alert('Error: ' + data.error);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error adding event:', error);
+                            alert('There is a problem!!!');
+                        });
+                    } else {
+                        alert('Please fill out all fields.');
+                    }
+                };
+        
             },
             eventResize: function(info) {
                 var event = info.event;

@@ -105,6 +105,7 @@ class UserCompanyRole(models.Model):
     
 class Event(models.Model):
     specialist = models.ForeignKey(Specialist, on_delete=models.CASCADE, related_name='events')
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='events')
     title = models.CharField(max_length=255)
     start = models.DateTimeField()
     end = models.DateTimeField()

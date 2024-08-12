@@ -10,7 +10,7 @@ from django.views.generic import ListView, CreateView, UpdateView, DetailView
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
-from .forms import LoginForm, BotForm, AdminForm, RegistrationForm, SpecialistForm, ServiceCategoryForm, ServiceForm
+from .forms import LoginForm, BotForm, AdminForm, RegistrationForm, SpecialistForm, ServiceCategoryForm, ServiceForm, EventForm
 from .models import Bot, User, Message, Company, UserCompanyRole, Specialist, Company, Event, Service, ServiceCategory
 from django.utils.dateparse import parse_date
 from django.db.models import Max
@@ -371,21 +371,43 @@ def get_specialist_events(request, specialist_id):
     } for event in events]
     return JsonResponse({'events': events_data})
 
+@login_required 
+def available_services_view(request, specialist_id):
+    try:
+        specialist = Specialist.objects.get(id=specialist_id)
+        services = specialist.services.all()  # Получаем все услуги, связанные со специалистом
+        services_data = [{'id': service.id, 'name': service.name} for service in services]
+        return JsonResponse({'success': True, 'services': services_data})
+    except Specialist.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Specialist not found'})
+    
+
 @login_required
 @csrf_exempt
 def add_event_view(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        title = data.get('title')
-        start = data.get('start')
-        end = data.get('end')
-        specialist_id = data.get('specialist_id')
- 
-        specialist = get_object_or_404(Specialist, id=specialist_id)
-        event = Event.objects.create(title=title, start=start, end=end, specialist=specialist)
-        return JsonResponse({'success': True, 'id': event.id})  # Убедитесь, что ID возвращается
+        data = json.loads(request.body)  # Предполагаем, что данные приходят в JSON
+        form = EventForm({
+            'title': data.get('title'),
+            'start': data.get('start'),
+            'end': data.get('end'),  # Если end не передается, его можно вычислить позже
+            'specialist': data.get('specialist_id'),
+            'service': data.get('service_id')
+        })
+
+        if form.is_valid():
+            event = form.save(commit=False)
+            #event.end = event.service.get_end_time(event.start)  # Устанавливаем конец события, если нужно
+            event.save()
+            return JsonResponse({'success': True, 'id': event.id})
+        else:
+            print(form.errors)  # Отладочное сообщение
+            return JsonResponse({'success': False, 'errors': form.errors})
     else:
-        return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
+        specialist_id = request.GET.get('specialist_id')
+        specialist = get_object_or_404(Specialist, id=specialist_id)
+        form = EventForm(specialist=specialist)
+        return render(request, 'core/add_event.html', {'form': form, 'specialist': specialist})
 
 @login_required
 @csrf_exempt

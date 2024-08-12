@@ -95,12 +95,92 @@ document.addEventListener('DOMContentLoaded', function() {
                         let services = data.services;
                         let select = document.getElementById('serviceSelect');
                         select.innerHTML = ''; // Очищаем существующие опции
+
+                         // Добавляем пустую опцию
+                        let emptyOption = document.createElement('option');
+                        emptyOption.value = '';
+                        emptyOption.textContent = 'Select Service';
+                        select.appendChild(emptyOption);
+                        
                         services.forEach(service => {
                             let option = document.createElement('option');
                             option.value = service.id;
                             option.textContent = service.name;
                             select.appendChild(option);
                         });
+            
+                        let selectedServiceDuration = 0;
+                        let selectedServiceName = "";
+                        select.addEventListener('change', function() {
+                            const selectedServiceId = this.value;
+                            const selectedService = services.find(service => service.id == selectedServiceId);
+                            if (selectedService) {
+                                selectedServiceDuration = selectedService.duration;
+                                selectedServiceName = selectedService.name;
+                                console.log('Selected Service Object:', selectedService); // Выводим весь объект для отладки
+                                console.log('Selected Service Duration:', selectedService.duration);
+                                console.log('Selected Service Name:', selectedService.name);
+                            }
+                        });
+            
+                        document.getElementById('addEventBtn').onclick = function() {
+                            var selectedServiceId = document.getElementById('serviceSelect').value;
+                            var start = document.getElementById('eventStart').value;
+                        
+                            if (selectedServiceId === '' || start === '') {
+                                alert('Please fill out all fields.');
+                                return;
+                            }
+                        
+                            // Преобразование времени в UTC перед отправкой на сервер
+                            var startTime = new Date(start);
+                            var startUTC = startTime.toISOString();  // Преобразуем время в ISO-формат UTC
+                        
+                            // Рассчитаем время окончания события на основе продолжительности услуги
+                            var endTime = new Date(startTime.getTime() + selectedServiceDuration * 60000);
+                            var endUTC = endTime.toISOString();  // Преобразуем время окончания в ISO-формат UTC
+                        
+                            console.log('Selected Service Duration after click Add:', selectedServiceDuration);
+                            console.log('Calculated End Time in UTC:', endUTC);
+                        
+                            fetch('/add_event/', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': csrftoken
+                                },
+                                body: JSON.stringify({
+                                    'title': selectedServiceName,
+                                    'start': startUTC,  // Отправляем время начала в формате UTC
+                                    'end': endUTC,  // Отправляем время окончания в формате UTC
+                                    'specialist_id': specialistId,
+                                    'service_id': selectedServiceId
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                console.log('getting data from modal:',
+                                    'title', selectedServiceName,
+                                    'start', startUTC,
+                                    'end', endUTC,
+                                    'specialist_id', specialistId,
+                                    'service_id', selectedServiceId);
+                                if (data.success) {
+                                    calendar.refetchEvents(); // Обновление событий после добавления
+                                    eventModal.hide(); // Закрываем модальное окно после успешного добавления
+                                    document.getElementById('serviceSelect').value = '';
+                                    document.getElementById('eventTitle').value = '';
+                                    document.getElementById('eventStart').value = '';
+                                } else {
+                                    console.error('Error add event:', data, data.error);
+                                    alert('Error: ' + data.error);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error adding event:', error);
+                                alert('There is a problem!!!');
+                            });
+                        };
                     } else {
                         console.error('Error:', data.error);
                         alert('Error: ' + data.error);
@@ -110,59 +190,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('Error fetching services:', error);
                     alert('There was a problem fetching the services.');
                 });
-    
+            
                 // Открываем модальное окно
                 var eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
                 eventModal.show();
-
-                // Обработка добавления события при нажатии на кнопку "Добавить событие"
-                document.getElementById('addEventBtn').onclick = function() {
-                    var selectedService = document.getElementById('serviceSelect').value;
-                    var title = document.getElementById('eventTitle').value;
-                    var start = document.getElementById('eventStart').value;
-                    var end = document.getElementById('eventEnd').value;
-                
-                    if (selectedService && title && start && end) {
-                        fetch('/add_event/', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': csrftoken
-                            },
-                            body: JSON.stringify({
-                                'title': title,
-                                'start': start,
-                                'end': end,
-                                'specialist_id': specialistId,
-                                'service_id': selectedService
-                            })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            console.log('getting data from modal:',
-                                'title', title,
-                                'start', start,
-                                'end', end,
-                                'specialist_id', specialistId,
-                                'service_id', selectedService);
-                            if (data.success) {
-                                calendar.refetchEvents(); // Обновление событий после добавления
-                                eventModal.hide(); // Закрываем модальное окно после успешного добавления
-                            } else {
-                                console.error('Error add event:', data, data.error);
-                                alert('Error: ' + data.error);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error adding event:', error);
-                            alert('There is a problem!!!');
-                        });
-                    } else {
-                        alert('Please fill out all fields.');
-                    }
-                };
-        
             },
+            
             eventResize: function(info) {
                 var event = info.event;
                 var start = event.start.toISOString();

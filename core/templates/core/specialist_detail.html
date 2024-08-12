@@ -19,7 +19,6 @@
 
 <!-- Скрытое поле для CSRF-токена -->
 <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
-
 <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -41,10 +40,6 @@
                 <div class="mb-3">
                     <label for="eventStart" class="form-label">Start Time:</label>
                     <input type="datetime-local" id="eventStart" class="form-control">
-                </div>
-                <div class="mb-3">
-                    <label for="eventEnd" class="form-label">End Time:</label>
-                    <input type="datetime-local" id="eventEnd" class="form-control">
                 </div>
                 
             </div>

@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 import uuid
+from datetime import timedelta
     
 class Company(models.Model):
     name = models.CharField(max_length=100)
@@ -48,7 +49,7 @@ class Service(models.Model):
         return self.name
 
     def get_end_time(self, start_time):
-        return start_time + self.duration
+        return start_time + timedelta(minutes=self.duration)
     
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):

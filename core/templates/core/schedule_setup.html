@@ -1,0 +1,62 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Schedule Settings</h2>
+   
+    <div class="col-sm-12">
+        <div class="slider-container">
+            <input id="timeRangeSlider" type="text" value="" class="slider form-control" 
+                   data-slider-min="0" 
+                   data-slider-max="1439" 
+                   data-slider-step="30" 
+                   data-slider-value="[540, 1140]" 
+                   data-slider-orientation="horizontal" 
+                   data-slider-selection="before" 
+                   data-slider-tooltip="show">
+        </div>
+        <p>Time Range: <span id="sliderRangeLabel">08:00 - 20:00</span></p>
+        </div>
+    </div>
+
+    <table id="schedule-table" class="table table-bordered">
+        <thead>
+            <tr id="time-header">
+                <!-- Временные слоты будут добавлены здесь через скрипт -->
+            </tr>
+        </thead>
+        <tbody id="schedule-body">
+            <tr>
+                <td>Monday</td>
+            </tr>
+            <tr>
+                <td>Tuesday</td>
+            </tr>
+            <tr>
+                <td>Wednesday</td>
+            </tr>
+            <tr>
+                <td>Thursday</td>
+            </tr>
+            <tr>
+                <td>Friday</td>
+            </tr>
+            <tr>
+                <td>Saturday</td>
+            </tr>
+            <tr>
+                <td>Sunday</td>
+            </tr>
+        </tbody>
+    </table>
+    <button class="btn btn-primary" id="save-schedule">Сохранить Расписание</button>
+</div>
+
+<!-- Подключение скриптов -->
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="{% static 'js/setup_shedule.js' %}"></script>
+<script src="{% static 'bootstrap-slider/bootstrap-slider.min.js' %}"></script>
+
+{% endblock %}

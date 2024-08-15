@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Список расписаний</h1>
+
+<!-- Кнопка для добавления нового расписания -->
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+    Добавить расписание
+</button>
+
+<!-- Таблица с текущими расписаниями -->
+<table class="table mt-3">
+    <thead>
+        <tr>
+            <th>Название расписания</th>
+            <th>Специалисты</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for schedule in schedules %}
+        <tr>
+            <td>{{ schedule.name }}</td>
+            <td>
+                {% for specialist in schedule.specialists.all %}
+                    {{ specialist.name }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </td>
+            <td>
+                <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editScheduleModal{{ schedule.id }}">
+                    Редактировать
+                </button>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteScheduleModal{{ schedule.id }}">
+                    Удалить
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Модальное окно для добавления расписания -->
+<div class="modal fade" id="addScheduleModal" tabindex="-1" aria-labelledby="addScheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Контент модального окна для добавления расписания -->
+            <!-- Здесь разместим форму добавления расписания и выбор специалистов -->
+        </div>
+    </div>
+</div>
+
+<!-- Модальные окна для редактирования и удаления расписаний -->
+{% for schedule in schedules %}
+<div class="modal fade" id="editScheduleModal{{ schedule.id }}" tabindex="-1" aria-labelledby="editScheduleModalLabel{{ schedule.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Контент модального окна для редактирования расписания -->
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteScheduleModal{{ schedule.id }}" tabindex="-1" aria-labelledby="deleteScheduleModalLabel{{ schedule.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Контент модального окна для удаления расписания -->
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}

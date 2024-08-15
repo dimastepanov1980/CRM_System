@@ -11,7 +11,7 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
 from .forms import LoginForm, BotForm, AdminForm, RegistrationForm, SpecialistForm, ServiceCategoryForm, ServiceForm, EventForm
-from .models import Bot, User, Message, Company, UserCompanyRole, Specialist, Company, Event, Service, ServiceCategory
+from .models import Bot, User, Message, Company, UserCompanyRole, Specialist, Company, Event, Service, ServiceCategory, WorkSchedule, ScheduleEntry
 from django.utils.dateparse import parse_date
 from django.db.models import Max
 from datetime import datetime
@@ -257,6 +257,9 @@ def specialist_detail_view(request, uuid):
     specialist = get_object_or_404(Specialist, uuid=uuid)
     events = Event.objects.filter(specialist=specialist)
     events_data = []
+    company = specialist.company
+    schedules = WorkSchedule.objects.filter(company=company)
+
     for event in events:
         events_data.append({
             'id': event.id,
@@ -267,7 +270,8 @@ def specialist_detail_view(request, uuid):
 
     return render(request, 'core/specialist_detail.html', {
         'specialist': specialist,
-        'events': events_data
+        'events': events_data,
+        'schedules': schedules
     })  
 
 @csrf_exempt
@@ -382,13 +386,12 @@ def available_services_view(request, specialist_id):
     except Specialist.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Specialist not found'})
     
-
 @login_required
 @csrf_exempt
 def add_event_view(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        
+
         # Заполняем форму данными
         form = EventForm({
             'title': data.get('title'),
@@ -407,9 +410,7 @@ def add_event_view(request):
             return JsonResponse({'success': False, 'errors': form.errors})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
-    
-
-        
+       
 @login_required
 @csrf_exempt
 def update_event_view(request):
@@ -461,11 +462,105 @@ def remove_event_view(request):
 # -----------------------------------------------------
 
 
+# -----------------------------------------------------
+# ------------- < Schedule  > -----------------
+@login_required
+def get_schedules(request):
+    user = request.user
+    company = Company.objects.get(owner=user)
+    schedules = WorkSchedule.objects.filter(company=company).values('id', 'name')
+    return JsonResponse({'schedules': list(schedules)})
 
+@login_required
+def schedule_setup_view(request):
+    return render(request, 'core/schedule_setup.html')
+
+@login_required
+def schedule_list_view(request):
+    user = request.user
+    company = Company.objects.get(owner=user)
+    schedules = WorkSchedule.objects.filter(company=company)
+    specialists = Specialist.objects.filter(company=company, work_schedule__isnull=True)
+    context = {
+        'schedules': schedules,
+        'specialists': specialists,
+    }
+    return render(request, 'core/schedule_list.html', context)
+
+@csrf_exempt
+def save_schedule(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        
+        # Выводим полученные данные в лог для отладки
+        logger.debug(f"Received JSON data: {json.dumps(data, indent=2)}")
+        
+        name = data.get('name')
+        slots = data.get('slots', [])
+        user = request.user
+        company = Company.objects.get(owner=user)
+
+        if not name or not slots:
+            return JsonResponse({'success': False, 'error': 'Invalid data provided.'})
+
+        # Создаем новое расписание
+        work_schedule = WorkSchedule.objects.create(name=name, company=company)
+
+        # Сохраняем слоты расписания
+        for slot in slots:
+            try:
+                dows = slot['dow']
+                start_time = slot['start']
+                end_time = slot['end']
+
+                for day in dows:
+                    entry = ScheduleEntry.objects.create(
+                        day_of_week=day,
+                        start_time=start_time,
+                        end_time=end_time
+                    )
+                    work_schedule.schedule_entries.add(entry)
+            except (KeyError, ValueError) as e:
+                logger.error(f"Invalid slot data: {json.dumps(slot, indent=2)} - Error: {e}")
+                return JsonResponse({'success': False, 'error': 'Invalid slot data provided.'})
+
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+
+@login_required
+@csrf_exempt
+def apply_schedule(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        specialist_id = data.get('specialist_id')
+        schedule_id = data.get('schedule_id')
+
+        try:
+            specialist = Specialist.objects.get(id=specialist_id)
+            schedule = WorkSchedule.objects.get(id=schedule_id)
+            specialist.work_schedule = schedule
+            specialist.save()
+            return JsonResponse({'success': True})
+        except Specialist.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Specialist not found.'})
+        except WorkSchedule.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Schedule not found.'})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+
+# Кажется это не нужно, можно удалить  !
+#\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 def specialist_schedule_view(request, uuid):
     specialist = get_object_or_404(Specialist, uuid=uuid)
     # Здесь вы можете добавить логику для получения расписания специалиста
     return render(request, 'core/specialist_schedule.html', {'specialist': specialist})
+
+
+# ------------- ^ Schedule End ^ -----------------
+# -----------------------------------------------------
 
 #---------------------------------------------------------------------------------------------------------------------------
 

@@ -194,8 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Открываем модальное окно
                 var eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
                 eventModal.show();
-            },
-            
+            },            
             eventResize: function(info) {
                 var event = info.event;
                 var start = event.start.toISOString();

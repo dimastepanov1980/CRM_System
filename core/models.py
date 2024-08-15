@@ -19,7 +19,7 @@ class Specialist(models.Model):
     company = models.ForeignKey('Company', on_delete=models.CASCADE)
     email = models.CharField(max_length=100)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    work_schedule = models.JSONField(null=True, blank=True)
+    work_schedule = models.ForeignKey('WorkSchedule', on_delete=models.SET_NULL, null=True, blank=True)  # Связь с расписанием
     photo = models.ImageField(upload_to='specialists/', null=True, blank=True)
     phone_number = models.CharField(max_length=15)
     is_active = models.BooleanField(default=True)
@@ -114,6 +114,24 @@ class Event(models.Model):
     def __str__(self):
         return self.title
 
+class WorkSchedule(models.Model):
+    name = models.CharField(max_length=100)
+    company = models.ForeignKey('Company', on_delete=models.CASCADE)
+    specialists = models.ManyToManyField(Specialist, related_name='schedules', blank=True)
+    schedule_entries = models.ManyToManyField('ScheduleEntry')
+
+    def __str__(self):
+        return self.name
+
+class ScheduleEntry(models.Model):
+    DOW_CHOICES = [(i, day) for i, day in enumerate(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], 1)]
+    day_of_week = models.IntegerField(choices=DOW_CHOICES)  # День недели, например, 1 для Понедельника
+    start_time = models.TimeField()  # Время начала рабочего дня
+    end_time = models.TimeField()  # Время окончания рабочего дня
+
+    def __str__(self):
+        return f"{self.get_day_of_week_display()} from {self.start_time} to {self.end_time}"
+    
 #---------------------------------
 class Bot(models.Model):
     name = models.CharField(max_length=100)

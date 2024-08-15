@@ -260,6 +260,18 @@ def specialist_detail_view(request, uuid):
     company = specialist.company
     schedules = WorkSchedule.objects.filter(company=company)
 
+    # Формирование данных расписания
+    schedule_data = []
+    if specialist.work_schedule:
+        for entry in specialist.work_schedule.schedule_entries.all():
+            schedule_data.append({
+                'daysOfWeek': [entry.day_of_week],
+                'startTime': entry.start_time.strftime('%H:%M'),
+                'endTime': entry.end_time.strftime('%H:%M')
+            })
+        logger.debug(f"Fetching details for schedule_data: {schedule_data}")
+
+
     for event in events:
         events_data.append({
             'id': event.id,
@@ -268,11 +280,17 @@ def specialist_detail_view(request, uuid):
             'end': event.end.isoformat(),
         })
 
+    # Проверка того, что формирование schedule_data прошло успешно
+    logger.debug(f"Schedule Data: {json.dumps(schedule_data, indent=2)}")
+    
+    schedule_json = json.dumps(schedule_data)
+
     return render(request, 'core/specialist_detail.html', {
         'specialist': specialist,
         'events': events_data,
-        'schedules': schedules
-    })  
+        'schedules': schedules,
+        'schedule': schedule_json  # Передача расписания в шаблон
+    })
 
 @csrf_exempt
 @login_required

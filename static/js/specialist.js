@@ -2,57 +2,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const csrftoken = document.getElementById('csrf-token').value;
     const specialistId = document.getElementById('specialist-id').value;
 
-    // Логика для добавления специаилста
-    const addSpecialistForm = document.getElementById('addSpecialistForm');
-    if (addSpecialistForm) {
-        addSpecialistForm.addEventListener('submit', function(event) {
-            event.preventDefault();
+    const scheduleDataElement = document.getElementById('schedule-data');
+    let schedule_data = [];
 
-            const formData = new FormData(addSpecialistForm);
-            fetch(addSpecialistForm.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Add new specialist to the list
-                    const newSpecialist = document.createElement('li');
-                    newSpecialist.className = 'list-group-item';
-                    newSpecialist.innerHTML = `
-                        <a href="#" class="view-schedule-link" data-uuid="${data.specialist.uuid}">
-                            ${data.specialist.name} - ${data.specialist.specialization}
-                        </a>
-                    `;
-                    const specialistList = document.getElementById('specialist-list');
-                    if (specialistList) {
-                        specialistList.appendChild(newSpecialist);
-                    }
+    if (scheduleDataElement) {
+        try {
+            // Получаем текстовое содержание внутри тега <script>
+            const jsonData = scheduleDataElement.textContent.trim();
+            console.log('Полученные данные расписания:', jsonData);
 
-                    // Close the modal
-                    const addSpecialistModal = document.getElementById('addSpecialistModal');
-                    const modal = bootstrap.Modal.getInstance(addSpecialistModal);
-                    modal.hide();
+            // Парсим JSON-строку
+            schedule_data = JSON.parse(jsonData);
 
-                    // Reset the form
-                    addSpecialistForm.reset();
-
-                    // Redirect to specialist list
-                    window.location.href = '/specialists/';
-                } else {
-                    // Handle form errors
-                    alert('There was an error adding the specialist.');
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        });
+        } catch (error) {
+            console.error("Ошибка разбора JSON: ", error);
+        }
+    } else {
+        console.warn("Элемент с расписанием не найден.");
     }
 
-    // Логика для добавления евента в календарь специаилста
-    function updateCalendar(specialistId) {
+    console.log('Полученные данные расписания:', schedule_data);
+
+
+
+
+     // Логика для добавления евента в календарь специаилста
+     function updateCalendar(specialistId, schedule) {
+        console.log('Getting schedule Object:', schedule);
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
             headerToolbar: {
@@ -60,6 +36,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek,timeGridDay'
             },
+            initialView: 'timeGridWeek',
+            businessHours: schedule,
             events: function(fetchInfo, successCallback, failureCallback) {
                 fetch(`/specialist/${specialistId}/events/`, {
                     method: 'GET',
@@ -270,8 +248,59 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
-
         calendar.render();
     }
-    updateCalendar(specialistId);
+
+    updateCalendar(specialistId, schedule_data);
+
+    // Логика для добавления специаилста
+    const addSpecialistForm = document.getElementById('addSpecialistForm');
+    if (addSpecialistForm) {
+        addSpecialistForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(addSpecialistForm);
+            fetch(addSpecialistForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Add new specialist to the list
+                    const newSpecialist = document.createElement('li');
+                    newSpecialist.className = 'list-group-item';
+                    newSpecialist.innerHTML = `
+                        <a href="#" class="view-schedule-link" data-uuid="${data.specialist.uuid}">
+                            ${data.specialist.name} - ${data.specialist.specialization}
+                        </a>
+                    `;
+                    const specialistList = document.getElementById('specialist-list');
+                    if (specialistList) {
+                        specialistList.appendChild(newSpecialist);
+                    }
+
+                    // Close the modal
+                    const addSpecialistModal = document.getElementById('addSpecialistModal');
+                    const modal = bootstrap.Modal.getInstance(addSpecialistModal);
+                    modal.hide();
+
+                    // Reset the form
+                    addSpecialistForm.reset();
+
+                    // Redirect to specialist list
+                    window.location.href = '/specialists/';
+                } else {
+                    // Handle form errors
+                    alert('There was an error adding the specialist.');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
+
+   
 });

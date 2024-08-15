@@ -11,16 +11,22 @@
     <p><strong>Specialization:</strong> {{ specialist.specialization }}</p>
     <p><strong>Description:</strong> {{ specialist.description }}</p>
     <p><strong>Experience:</strong> {{ specialist.experience }} years</p>
-    <p><strong>Schedules:</strong> {{ schedules }} id</p>
-    <input type="hidden" id="specialist-id" value="{{ specialist.id }}">
+    <pre>{{ schedule|safe }}</pre>
+    <!-- Скрытое поле для CSRF-токена -->
+    <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+    <script id="schedule-data" type="application/json">
+        {{ schedule|safe }}
+    </script>
+        <input type="hidden" id="specialist-id" value="{{ specialist.id }}">
+
 </div>
 <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#scheduleModal">Add Schedul</button>
 
 <h2>Calendar</h2>
 <div id="calendar" style="width:100% !important"></div>
 
-<!-- Скрытое поле для CSRF-токена -->
-<input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+
+
 <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

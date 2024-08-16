@@ -23,11 +23,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('Полученные данные расписания:', schedule_data);
 
-
-
-
      // Логика для добавления евента в календарь специаилста
-     function updateCalendar(specialistId, schedule) {
+     function updateCalendar(specialist_uuid, schedule) {
         console.log('Getting schedule Object:', schedule);
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
@@ -38,8 +35,13 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             initialView: 'timeGridWeek',
             businessHours: schedule,
+            selectConstraint: schedule,
+            height: '100%',
+            slotMinTime: '08:00',
+            slotMaxTime: '20:00',
+            expandRows: true,
             events: function(fetchInfo, successCallback, failureCallback) {
-                fetch(`/specialist/${specialistId}/events/`, {
+                fetch(`/specialist/${specialist_uuid}/events/`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -59,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
             editable: true,
             select: function({ start, end, allDay }) {
                 // Запрос на получение доступных услуг для данного специалиста
-                fetch(`/specialist/${specialistId}/available_services/`, {
+                fetch(`/specialist/${specialist_uuid}/available_services/`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',

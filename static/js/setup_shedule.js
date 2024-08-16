@@ -124,6 +124,32 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function fetchAndUpdateSchedule(uuid) {
+        fetch(`/specialist/${uuid}/schedule/`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            let businessHours = [];
+            if (data.schedule) {
+                businessHours = data.schedule.map(scheduleItem => ({
+                    daysOfWeek: scheduleItem.dow,
+                    startTime: scheduleItem.start,
+                    endTime: scheduleItem.end
+                }));
+            }
+    
+            // Обновляем календарь
+            window.sharedData.updateCalendar(uuid, businessHours);
+        })
+        .catch(error => {
+            console.error('Ошибка получения расписания:', error);
+        });
+    }
     // Initial grid setup
     updateTimeSlots(defaultStartHour, defaultEndHour);
 
@@ -259,6 +285,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 alert('Schedule applied successfully!');
                 // Close the schedule modal
                 const scheduleModal = bootstrap.Modal.getInstance(document.getElementById('scheduleModal'));
+                console.log('new_schedule schedule:', data.new_schedule);
+
                 scheduleModal.hide();
 
                 // Optionally, refresh the page or update the UI to reflect the new schedule applied to the specialist

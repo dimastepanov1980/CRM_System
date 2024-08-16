@@ -289,7 +289,7 @@ def specialist_detail_view(request, uuid):
         'specialist': specialist,
         'events': events_data,
         'schedules': schedules,
-        'schedule': schedule_json  # Передача расписания в шаблон
+        'schedule': schedule_json
     })
 
 @csrf_exempt
@@ -377,14 +377,10 @@ def specialist_list_view(request):
 # -----------------------------------------------------
 # ------------- < Specialist Event  > -----------------
 
-@login_required
-def all_events_view(request):
-    events = Event.objects.all().values('title', 'start', 'end', 'specialist_id')
-    return JsonResponse(list(events), safe=False)
 
 @login_required
-def get_specialist_events(request, specialist_id):
-    specialist = get_object_or_404(Specialist, id=specialist_id)
+def get_specialist_events(request, uuid):
+    specialist = get_object_or_404(Specialist, uuid=uuid)
     events = Event.objects.filter(specialist=specialist)
     events_data = [{
         'id': event.id,
@@ -482,6 +478,30 @@ def remove_event_view(request):
 
 # -----------------------------------------------------
 # ------------- < Schedule  > -----------------
+
+@login_required
+def get_schedule(request, uuid):
+    logger.debug(f"Fetching details for specialist with UUID: {uuid}")
+    specialist = get_object_or_404(Specialist, uuid=uuid)
+
+    # Формирование данных расписания
+    schedule_data = []
+    if specialist.work_schedule:
+        for entry in specialist.work_schedule.schedule_entries.all():
+            schedule_data.append({
+                'daysOfWeek': [entry.day_of_week],
+                'startTime': entry.start_time.strftime('%H:%M'),
+                'endTime': entry.end_time.strftime('%H:%M')
+            })
+            logger.debug(f"Fetching details for schedule_data: {schedule_data}")
+
+            # Проверка того, что формирование schedule_data прошло успешно
+            logger.debug(f"Schedule Data: {json.dumps(schedule_data, indent=2)}")
+            schedule_json = json.dumps(schedule_data)
+            return JsonResponse({'success': True, 'schedule': schedule_json})
+    else:
+            return JsonResponse({'success': False, 'error': 'No schedule found for this specialist'})
+
 @login_required
 def get_schedules(request):
     user = request.user

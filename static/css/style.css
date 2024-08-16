@@ -57,3 +57,20 @@
     overflow-x: auto; /* Включаем горизонтальную прокрутку для таблицы */
     white-space: nowrap; /* Запрещаем перенос текста, чтобы сохранить таблицу на одной линии */
 }
+
+#calendar-container {
+    position: fixed;
+    top: 10em;
+    left: 50em;
+    right: 10em;
+    bottom: 10em;
+  }
+.fc-header-toolbar {
+/*
+    the calendar will be butting up against the edges,
+    but let's scoot in the header's buttons
+    */
+    padding-top: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
+}

@@ -1,6 +1,6 @@
 from django.urls import path
 from django.conf.urls import handler404, handler400
-from .views import schedule_setup_view, get_schedules, apply_schedule, save_schedule, admin_dashboard_view, specialist_list_view, get_specialist_events, available_services_view, get_category_view, edit_category_view, delete_service_category_view, add_event_view, services_list_view, add_service_view, edit_service_view, delete_service_view, add_service_category_view, all_events_view, update_event_view, remove_event_view, specialist_detail_view, specialist_add_view, specialist_edit_view, specialist_delete_view, login_view, register, bot_list_view, logout_view, custom_404_view, custom_400_view, home, BotCreateView, BotUpdateView, BotDetailView, message_list_view, user_list_view, webhook, AdminCreateView, AdminListView, AdminUpdateView
+from .views import schedule_setup_view, get_schedules, get_schedule, apply_schedule, save_schedule, admin_dashboard_view, specialist_list_view, get_specialist_events, available_services_view, get_category_view, edit_category_view, delete_service_category_view, add_event_view, services_list_view, add_service_view, edit_service_view, delete_service_view, add_service_category_view, update_event_view, remove_event_view, specialist_detail_view, specialist_add_view, specialist_edit_view, specialist_delete_view, login_view, register, bot_list_view, logout_view, custom_404_view, custom_400_view, home, BotCreateView, BotUpdateView, BotDetailView, message_list_view, user_list_view, webhook, AdminCreateView, AdminListView, AdminUpdateView
 
 
 urlpatterns = [
@@ -28,15 +28,15 @@ urlpatterns = [
     path('edit_category/<int:category_id>/', edit_category_view, name='edit_category'),
 
 
-    path('all_events/', all_events_view, name='all_events'),
     path('add_event/', add_event_view, name='add_event'),  # добавить маршруты для событий
     path('specialist/<int:specialist_id>/available_services/', available_services_view, name='available_services'),    path('update_event/', update_event_view, name='update_event'),
     path('remove_event/', remove_event_view, name='remove_event'),
-    path('specialist/<int:specialist_id>/events/', get_specialist_events, name='get_specialist_events'),
+    path('specialist/<uuid:uuid>/events/', get_specialist_events, name='get_specialist_events'),
 
     path('schedule-setup/', schedule_setup_view, name='schedule_setup'),
     path('save_schedule/', save_schedule, name='save_schedule'),
     path('get_schedules/', get_schedules, name='get_schedules'),
+    path('specialist/<uuid:uuid>/schedule/', get_schedule, name='get_schedule'),
     path('apply_schedule/', apply_schedule, name='apply_schedule'),
     
     path('bots/', bot_list_view, name='bot_list'),

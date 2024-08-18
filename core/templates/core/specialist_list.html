@@ -42,20 +42,20 @@
             <!-- Столбец с переключателем активный / не активный -->
             <td>
                 <div class="custom-switch custom-switch-label-onoff custom-switch-xs pl-0">
-                    <input class="custom-switch-input" type="checkbox" id="activeSwitch{{ specialist.id }}" {% if specialist.is_active %}checked{% endif %}>
-                    <label class="custom-switch-btn" for="activeSwitch{{ specialist.id }}"></label>
+                    <input class="custom-switch-input" type="checkbox" id="activeSwitch{{ specialist.uuid }}" {% if specialist.is_active %}checked{% endif %}>
+                    <label class="custom-switch-btn" for="activeSwitch{{ specialist.uuid }}"></label>
                 </div>
             </td>
 
             <!-- Столбец с иконкой и выпадающим меню -->
             <td>
                 <div class="dropdown">
-                    <button class="btn dropdown-toggle" id="dropdownMenuButton{{ specialist.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="btn dropdown-toggle" id="dropdownMenuButton{{ specialist.uuid }}" data-bs-toggle="dropdown" aria-expanded="false">
                         ...
                     </button>
-                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ specialist.id }}">
-                        <li><a class="dropdown-item" href="{% url 'specialist_edit' specialist.id %}">Редактировать</a></li>
-                        <li><a class="dropdown-item" href="{% url 'specialist_delete' specialist.id %}">Удалить</a></li>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ specialist.uuid }}">
+                        <li><a class="dropdown-item" href="{% url 'specialist_edit' specialist.uuid %}">Редактировать</a></li>
+                        <li><a class="dropdown-item" href="{% url 'specialist_delete' specialist.uuid %}">Удалить</a></li>
                     </ul>
                 </div>
             </td>
@@ -96,7 +96,7 @@
                 <form id="editSpecialistForm" method="post">
                     {% csrf_token %}
                     {{ form.as_p }}
-                    <input type="hidden" id="editSpecialistId" name="specialist_id">
+                    <input type="hidden" id="editSpecialistId" name="specialist_uuid">
                     <button type="submit" class="btn btn-primary">Save changes</button>
                 </form>
             </div>

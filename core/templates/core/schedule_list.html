@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "core/base.html" %}
 
 {% block content %}
 <h1>Список расписаний</h1>
@@ -12,9 +12,9 @@
 <table class="table mt-3">
     <thead>
         <tr>
-            <th>Название расписания</th>
-            <th>Специалисты</th>
-            <th>Действия</th>
+            <th>Name</th>
+            <th>Specialists</th>
+            <th>Schedule Entries</th>
         </tr>
     </thead>
     <tbody>
@@ -22,8 +22,17 @@
         <tr>
             <td>{{ schedule.name }}</td>
             <td>
-                {% for specialist in schedule.specialists.all %}
-                    {{ specialist.name }}{% if not forloop.last %}, {% endif %}
+                {% if schedule.specialists.exists %}
+                    {% for specialist in schedule.specialists.all %}
+                        {{ specialist.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                {% else %}
+                    No specialists assigned
+                {% endif %}
+            </td>
+            <td>
+                {% for entry in schedule.schedule_entries.all %}
+                    {{ entry }}{% if not forloop.last %}, {% endif %}
                 {% endfor %}
             </td>
             <td>

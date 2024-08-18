@@ -112,7 +112,7 @@ def add_service_view(request):
                     'duration': service.duration,
                     'price': service.price,
                     'category': service.category.name,
-                    'specialists': list(service.specialists.values('id', 'name'))  # Возвращаем список специалистов
+                    'specialists': list(service.specialists.values('uuid', 'name'))  # Возвращаем список специалистов
                 }
             })
         else:
@@ -174,8 +174,8 @@ def edit_service_view(request, service_id):
     
 @login_required
 @require_http_methods(["DELETE"])
-def delete_service_view(request, id):
-    service = get_object_or_404(Service, id=id)
+def delete_service_view(request, service_id):
+    service = get_object_or_404(Service, id=service_id)
     service.delete()
     return JsonResponse({'success': True})
 # ------------- ^ Servises End ^ -------------------
@@ -323,8 +323,8 @@ def specialist_add_view(request):
     return render(request, 'core/add_specialist.html', {'form': form})
 
 @login_required
-def specialist_edit_view(request, id):
-    specialist = get_object_or_404(Specialist, id=id)
+def specialist_edit_view(request, uuid):
+    specialist = get_object_or_404(Specialist, uuid=uuid)
     company = request.user.companies.first()
     if request.method == 'POST':
         form = SpecialistForm(request.POST, request.FILES, instance=specialist)
@@ -340,8 +340,8 @@ def specialist_edit_view(request, id):
     return render(request, 'core/specialist_edit.html', {'form': form, 'specialist': specialist})
 
 @login_required
-def specialist_delete_view(request, id):
-    specialist = get_object_or_404(Specialist, id=id)
+def specialist_delete_view(request, uuid):
+    specialist = get_object_or_404(Specialist, uuid=uuid)
     if request.method == 'POST':
         specialist.delete()
         return redirect('specialist_list')
@@ -391,9 +391,9 @@ def get_specialist_events(request, uuid):
     return JsonResponse({'events': events_data})
 
 @login_required 
-def available_services_view(request, specialist_id):
+def available_services_view(request, specialist_uuid):
     try:
-        specialist = Specialist.objects.get(id=specialist_id)
+        specialist = Specialist.objects.get(uuid=specialist_uuid)
         services = specialist.services.all()  # Получаем все услуги, связанные со специалистом
         services_data = [{'id': service.id, 'name': service.name, 'duration': service.duration, "price": service.price } for service in services]
         return JsonResponse({'success': True, 'services': services_data})
@@ -411,7 +411,7 @@ def add_event_view(request):
             'title': data.get('title'),
             'start': data.get('start'),
             'end': data.get('end'),
-            'specialist': data.get('specialist_id'),
+            'specialist': data.get('specialist_uuid'),
             'service': data.get('service_id')
         })
 
@@ -434,15 +434,15 @@ def update_event_view(request):
         start = data.get('start')
         end = data.get('end')
         title = data.get('title')
-        specialist_id = data.get('specialist_id')
+        specialist_uuid = data.get('specialist_uuid')
 
-        specialist = get_object_or_404(Specialist, id=specialist_id)
+        specialist = get_object_or_404(Specialist, uuid=specialist_uuid)
         event = get_object_or_404(Event, id=event_id, specialist=specialist)
         if event:
             event.title = title
             event.start = start
             event.end = end
-            event.specialist_id = specialist_id
+            event.specialist_uuid = specialist_uuid
             event.save()
             
             return JsonResponse({'success': True, 'id': event.id})
@@ -457,15 +457,15 @@ def remove_event_view(request):
         start = data.get('start')
         end = data.get('end')
         title = data.get('title')
-        specialist_id = data.get('specialist_id')
+        specialist_uuid = data.get('specialist_uuid')
 
-        specialist = get_object_or_404(Specialist, id=specialist_id)
+        specialist = get_object_or_404(Specialist, uuid=specialist_uuid)
         event = get_object_or_404(Event, id=event_id, specialist=specialist)
         if event:
             event.title = title
             event.start = start
             event.end = end
-            event.specialist_id = specialist_id
+            event.specialist_uuid = specialist_uuid
             event.delete()
             
             return JsonResponse({'success': True, 'id': event.id})
@@ -479,10 +479,12 @@ def remove_event_view(request):
 # -----------------------------------------------------
 # ------------- < Schedule  > -----------------
 
+
+    
 @login_required
-def get_schedule(request, uuid):
-    logger.debug(f"Fetching details for specialist with UUID: {uuid}")
-    specialist = get_object_or_404(Specialist, uuid=uuid)
+def get_schedule(request, specialist_uuid):
+    logger.debug(f"Fetching details for specialist with UUID: {specialist_uuid}")
+    specialist = get_object_or_404(Specialist, uuid=specialist_uuid)
 
     # Формирование данных расписания
     schedule_data = []
@@ -566,21 +568,32 @@ def save_schedule(request):
 
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
-
 @login_required
 @csrf_exempt
 def apply_schedule(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        specialist_id = data.get('specialist_id')
+        specialist_uuid = data.get('specialist_uuid')
         schedule_id = data.get('schedule_id')
+        logger.debug(f"apply schedule for specialist with UUID: {specialist_uuid}")
 
         try:
-            specialist = Specialist.objects.get(id=specialist_id)
+            specialist = Specialist.objects.get(uuid=specialist_uuid)
             schedule = WorkSchedule.objects.get(id=schedule_id)
             specialist.work_schedule = schedule
             specialist.save()
-            return JsonResponse({'success': True})
+
+            # Формируем данные для нового расписания
+            new_schedule_data = []
+            for entry in schedule.schedule_entries.all():
+                new_schedule_data.append({
+                    'daysOfWeek': [entry.day_of_week],
+                    'startTime': entry.start_time.strftime('%H:%M'),
+                    'endTime': entry.end_time.strftime('%H:%M')
+                })
+
+            logger.debug(f"New work schedule for specialist: {new_schedule_data}")
+            return JsonResponse({'success': True, 'new_schedule': new_schedule_data})
         except Specialist.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Specialist not found.'})
         except WorkSchedule.DoesNotExist:

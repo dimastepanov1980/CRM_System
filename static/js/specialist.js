@@ -1,37 +1,13 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const csrftoken = document.getElementById('csrf-token').value;
-    const specialistId = document.getElementById('specialist-id').value;
-
-    const scheduleDataElement = document.getElementById('schedule-data');
-    let schedule_data = [];
-
-    if (scheduleDataElement) {
-        try {
-            // Получаем текстовое содержание внутри тега <script>
-            const jsonData = scheduleDataElement.textContent.trim();
-            console.log('Полученные данные расписания:', jsonData);
-
-            // Парсим JSON-строку
-            schedule_data = JSON.parse(jsonData);
-
-        } catch (error) {
-            console.error("Ошибка разбора JSON: ", error);
-        }
-    } else {
-        console.warn("Элемент с расписанием не найден.");
-    }
-
-    console.log('Полученные данные расписания:', schedule_data);
 
      // Логика для добавления евента в календарь специаилста
-     function updateCalendar(specialist_uuid, schedule) {
+     function updateCalendar(specialist_uuid, schedule, csrftoken) {
         console.log('Getting schedule Object:', schedule);
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                right: 'timeGridWeek,timeGridDay'
             },
             initialView: 'timeGridWeek',
             businessHours: schedule,
@@ -133,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     'title': selectedServiceName,
                                     'start': startUTC,  // Отправляем время начала в формате UTC
                                     'end': endUTC,  // Отправляем время окончания в формате UTC
-                                    'specialist_id': specialistId,
+                                    'specialist_uuid': specialistId,
                                     'service_id': selectedServiceId
                                 })
                             })
@@ -143,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     'title', selectedServiceName,
                                     'start', startUTC,
                                     'end', endUTC,
-                                    'specialist_id', specialistId,
+                                    'specialist_uuid', specialistId,
                                     'service_id', selectedServiceId);
                                 if (data.success) {
                                     calendar.refetchEvents(); // Обновление событий после добавления
@@ -188,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': csrftoken
                     },
-                    body: JSON.stringify({'title': title, 'id': id, 'start': start, 'end': end, 'specialist_id': specialistId})
+                    body: JSON.stringify({'title': title, 'id': id, 'start': start, 'end': end, 'specialist_uuid': specialistId})
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -212,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': csrftoken
                     },
-                    body: JSON.stringify({'title': title, 'id': id, 'start': start, 'end': end, 'specialist_id': specialistId})
+                    body: JSON.stringify({'title': title, 'id': id, 'start': start, 'end': end, 'specialist_uuid': specialistId})
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -237,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             'Content-Type': 'application/json',
                             'X-CSRFToken': csrftoken
                         },
-                        body: JSON.stringify({'title': title, 'id': id, 'start': start, 'end': end, 'specialist_id': specialistId})
+                        body: JSON.stringify({'title': title, 'id': id, 'start': start, 'end': end, 'specialist_uuid': specialistId})
                     })
                     .then(response => response.json())
                     .then(data => {
@@ -252,8 +228,31 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         calendar.render();
     }
+    
+document.addEventListener('DOMContentLoaded', function() {
+    const csrftoken = document.getElementById('csrf-token').value;
+    const specialistId = document.getElementById('specialist-uuid').value;
 
-    updateCalendar(specialistId, schedule_data);
+    const scheduleDataElement = document.getElementById('schedule-data');
+    let schedule_data = [];
+
+    if (scheduleDataElement) {
+        try {
+            // Получаем текстовое содержание внутри тега <script>
+            const jsonData = scheduleDataElement.textContent.trim();
+            console.log('Полученные данные расписания:', jsonData);
+
+            // Парсим JSON-строку
+            schedule_data = JSON.parse(jsonData);
+
+        } catch (error) {
+            console.error("Ошибка разбора JSON: ", error);
+        }
+    } else {
+        console.warn("Элемент с расписанием не найден.");
+    }
+
+    updateCalendar(specialistId, schedule_data, csrftoken);
 
     // Логика для добавления специаилста
     const addSpecialistForm = document.getElementById('addSpecialistForm');

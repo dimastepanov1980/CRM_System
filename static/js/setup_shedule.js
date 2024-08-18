@@ -261,7 +261,10 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('applyScheduleBtn').addEventListener('click', function () {
         const scheduleSelect = document.getElementById('scheduleSelect');
         const selectedScheduleId = scheduleSelect.value;
-        const specialistId = document.getElementById('specialist-id').value; // Assuming the specialist ID is passed in a hidden field or another accessible element
+        const specialistId = document.getElementById('specialist-uuid').value;
+        const csrftoken = document.getElementById('csrf-token').value;
+
+        console.log('!UUID specialist:', specialistId);
 
         if (!selectedScheduleId) {
             alert('Please select a schedule.');
@@ -272,11 +275,11 @@ document.addEventListener('DOMContentLoaded', function () {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'X-CSRFToken': csrftoken
             },
             body: JSON.stringify({
                 schedule_id: selectedScheduleId,
-                specialist_id: specialistId
+                specialist_uuid: specialistId
             })
         })
         .then(response => response.json())
@@ -285,7 +288,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 alert('Schedule applied successfully!');
                 // Close the schedule modal
                 const scheduleModal = bootstrap.Modal.getInstance(document.getElementById('scheduleModal'));
-                console.log('new_schedule schedule:', data.new_schedule);
+                console.log('new_schedule schedule:', data);
+
+                updateCalendar(specialistId, data.new_schedule, csrftoken);
 
                 scheduleModal.hide();
 

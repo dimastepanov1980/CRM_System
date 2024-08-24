@@ -15,6 +15,7 @@ from .models import Bot, User, Message, Company, UserCompanyRole, Specialist, Co
 from django.utils.dateparse import parse_date
 from django.db.models import Max
 from datetime import datetime
+from django.db import transaction
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -252,25 +253,49 @@ def edit_category_view(request, category_id):
 # ------------- < Specialist  > -----------------------
 
 @login_required
+def specialist_list_view(request):
+    user = request.user
+    company = Company.objects.get(owner=user)
+    specialists = Specialist.objects.filter(company=company)
+    form = SpecialistForm()
+    logger.debug(f"Fetching specialist list for company: {specialists} {company}")
+
+    if request.method == 'POST':
+        form = SpecialistForm(request.POST)
+        if form.is_valid():
+            specialist = form.save()
+            return JsonResponse({
+                'success': True,
+                'specialist': {
+                    'uuid': specialist.uuid,
+                    'name': specialist.name,
+                    'specialization': specialist.specialization
+                }
+            })
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors})
+
+    return render(request, 'core/specialist_list.html', {'specialists': specialists, 'form': form})
+
+@login_required
 def specialist_detail_view(request, uuid):
     logger.debug(f"Fetching details for specialist with UUID: {uuid}")
     specialist = get_object_or_404(Specialist, uuid=uuid)
     events = Event.objects.filter(specialist=specialist)
     events_data = []
     company = specialist.company
-    schedules = WorkSchedule.objects.filter(company=company)
+    schedules = WorkSchedule.objects.filter(company=company, specialists=specialist)  # Получаем расписания, связанные со специалистом
 
     # Формирование данных расписания
     schedule_data = []
-    if specialist.work_schedule:
-        for entry in specialist.work_schedule.schedule_entries.all():
+    for schedule in schedules:
+        for entry in schedule.schedule_entries.all():
             schedule_data.append({
                 'daysOfWeek': [entry.day_of_week],
                 'startTime': entry.start_time.strftime('%H:%M'),
                 'endTime': entry.end_time.strftime('%H:%M')
             })
-        logger.debug(f"Fetching details for schedule_data: {schedule_data}")
-
+    logger.debug(f"Fetching details for schedule_data: {schedule_data}")
 
     for event in events:
         events_data.append({
@@ -347,36 +372,10 @@ def specialist_delete_view(request, uuid):
         return redirect('specialist_list')
     return render(request, 'core/specialist_confirm_delete.html', {'specialist': specialist})
 
-@login_required
-def specialist_list_view(request):
-    user = request.user
-    company = Company.objects.get(owner=user)
-    specialists = Specialist.objects.filter(company=company)
-    form = SpecialistForm()
-    logger.debug(f"Fetching specialist list for company: {specialists} {company}")
-
-    if request.method == 'POST':
-        form = SpecialistForm(request.POST)
-        if form.is_valid():
-            specialist = form.save()
-            return JsonResponse({
-                'success': True,
-                'specialist': {
-                    'uuid': specialist.uuid,
-                    'name': specialist.name,
-                    'specialization': specialist.specialization
-                }
-            })
-        else:
-            return JsonResponse({'success': False, 'errors': form.errors})
-
-    return render(request, 'core/specialist_list.html', {'specialists': specialists, 'form': form})
-
 # ------------- ^ Specialist End ^ --------------------
 # -----------------------------------------------------
 # -----------------------------------------------------
 # ------------- < Specialist Event  > -----------------
-
 
 @login_required
 def get_specialist_events(request, uuid):
@@ -488,28 +487,44 @@ def get_schedule(request, specialist_uuid):
 
     # Формирование данных расписания
     schedule_data = []
-    if specialist.work_schedule:
-        for entry in specialist.work_schedule.schedule_entries.all():
-            schedule_data.append({
-                'daysOfWeek': [entry.day_of_week],
-                'startTime': entry.start_time.strftime('%H:%M'),
-                'endTime': entry.end_time.strftime('%H:%M')
-            })
+    work_schedules = WorkSchedule.objects.filter(specialists=specialist)
+    
+    if work_schedules.exists():
+        for schedule in work_schedules:
+            for entry in schedule.schedule_entries.all():
+                schedule_data.append({
+                    'daysOfWeek': [entry.day_of_week],
+                    'startTime': entry.start_time.strftime('%H:%M'),
+                    'endTime': entry.end_time.strftime('%H:%M')
+                })
             logger.debug(f"Fetching details for schedule_data: {schedule_data}")
 
-            # Проверка того, что формирование schedule_data прошло успешно
-            logger.debug(f"Schedule Data: {json.dumps(schedule_data, indent=2)}")
-            schedule_json = json.dumps(schedule_data)
-            return JsonResponse({'success': True, 'schedule': schedule_json})
+        # Проверка того, что формирование schedule_data прошло успешно
+        logger.debug(f"Schedule Data: {json.dumps(schedule_data, indent=2)}")
+        return JsonResponse({'success': True, 'schedule': schedule_data})
     else:
-            return JsonResponse({'success': False, 'error': 'No schedule found for this specialist'})
-
+        return JsonResponse({'success': False, 'error': 'No schedule found for this specialist'})
+    
 @login_required
 def get_schedules(request):
     user = request.user
     company = Company.objects.get(owner=user)
-    schedules = WorkSchedule.objects.filter(company=company).values('id', 'name')
-    return JsonResponse({'schedules': list(schedules)})
+    schedules = WorkSchedule.objects.filter(company=company)
+
+    # Подготавливаем данные для ответа
+    schedules_data = []
+    for schedule in schedules:
+        specialists = schedule.specialists.values('name')  # Получаем имена специалистов
+        schedule_entries = schedule.schedule_entries.values('day_of_week', 'start_time', 'end_time')  # Получаем записи расписания
+
+        schedules_data.append({
+            'id': schedule.id,
+            'name': schedule.name,
+            'specialists': list(specialists),  # Преобразуем QuerySet в список
+            'schedule_entries': list(schedule_entries)  # Преобразуем QuerySet в список
+        })
+
+    return JsonResponse({'schedules': schedules_data})
 
 @login_required
 def schedule_setup_view(request):
@@ -520,12 +535,16 @@ def schedule_list_view(request):
     user = request.user
     company = Company.objects.get(owner=user)
     schedules = WorkSchedule.objects.filter(company=company)
-    specialists = Specialist.objects.filter(company=company, work_schedule__isnull=True)
+    
+    # Получаем всех специалистов компании, которые не привязаны к каким-либо расписаниям
+    specialists = Specialist.objects.filter(company=company).exclude(schedules__in=schedules)
+
     context = {
         'schedules': schedules,
         'specialists': specialists,
     }
     return render(request, 'core/schedule_list.html', context)
+
 
 @csrf_exempt
 def save_schedule(request):
@@ -570,22 +589,30 @@ def save_schedule(request):
 
 @login_required
 @csrf_exempt
+@transaction.atomic  # Используем транзакцию для обеспечения целостности данных
 def apply_schedule(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         specialist_uuid = data.get('specialist_uuid')
         schedule_id = data.get('schedule_id')
-        logger.debug(f"apply schedule for specialist with UUID: {specialist_uuid}")
+        logger.debug(f"Apply schedule for specialist with UUID: {specialist_uuid}")
 
         try:
             specialist = Specialist.objects.get(uuid=specialist_uuid)
-            schedule = WorkSchedule.objects.get(id=schedule_id)
-            specialist.work_schedule = schedule
-            specialist.save()
+            new_schedule = WorkSchedule.objects.get(id=schedule_id)
+
+            # Удаляем специалиста из всех предыдущих расписаний
+            previous_schedules = WorkSchedule.objects.filter(specialists=specialist)
+            for schedule in previous_schedules:
+                schedule.specialists.remove(specialist)
+
+            # Привязываем специалиста к новому расписанию
+            new_schedule.specialists.add(specialist)
+            new_schedule.save()
 
             # Формируем данные для нового расписания
             new_schedule_data = []
-            for entry in schedule.schedule_entries.all():
+            for entry in new_schedule.schedule_entries.all():
                 new_schedule_data.append({
                     'daysOfWeek': [entry.day_of_week],
                     'startTime': entry.start_time.strftime('%H:%M'),

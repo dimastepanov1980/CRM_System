@@ -36,9 +36,14 @@
                 </div>
             </td>
 
-            <!-- Столбец с расписанием до -->
-            <td>{{ specialist.work_schedule }}</td>
-
+            <!-- Столбец с расписанием -->
+            <td>
+                {% for schedule in specialist.schedules.all %}
+                    {{ schedule.name }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    No schedules
+                {% endfor %}
+            </td>
             <!-- Столбец с переключателем активный / не активный -->
             <td>
                 <div class="custom-switch custom-switch-label-onoff custom-switch-xs pl-0">

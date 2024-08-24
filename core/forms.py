@@ -41,9 +41,8 @@ class SpecialistForm(forms.ModelForm):
 
     class Meta:
         model = Specialist
-        fields = ['name', 'specialization', 'description', 'experience', 'email', 'phone_number', 'work_schedule', 'photo', 'services']
+        fields = ['name', 'specialization', 'description', 'experience', 'email', 'phone_number', 'photo', 'services']
         widgets = {
-            'work_schedule': forms.HiddenInput(),
             'photo': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
         }
 

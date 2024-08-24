@@ -1,12 +1,11 @@
 {% extends "core/base.html" %}
+{% load static %}
 
 {% block content %}
 <h1>Список расписаний</h1>
 
 <!-- Кнопка для добавления нового расписания -->
-<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
-    Добавить расписание
-</button>
+<button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#scheduleSettingsModal">Добавить Расписание</button>
 
 <!-- Таблица с текущими расписаниями -->
 <table class="table mt-3">
@@ -17,64 +16,69 @@
             <th>Schedule Entries</th>
         </tr>
     </thead>
-    <tbody>
-        {% for schedule in schedules %}
-        <tr>
-            <td>{{ schedule.name }}</td>
-            <td>
-                {% if schedule.specialists.exists %}
-                    {% for specialist in schedule.specialists.all %}
-                        {{ specialist.name }}{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                {% else %}
-                    No specialists assigned
-                {% endif %}
-            </td>
-            <td>
-                {% for entry in schedule.schedule_entries.all %}
-                    {{ entry }}{% if not forloop.last %}, {% endif %}
-                {% endfor %}
-            </td>
-            <td>
-                <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editScheduleModal{{ schedule.id }}">
-                    Редактировать
-                </button>
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteScheduleModal{{ schedule.id }}">
-                    Удалить
-                </button>
-            </td>
-        </tr>
-        {% endfor %}
+    <tbody id="scheduleTableBody">
+        <!-- Данные будут загружены динамически с помощью JavaScript -->
     </tbody>
 </table>
 
-<!-- Модальное окно для добавления расписания -->
-<div class="modal fade" id="addScheduleModal" tabindex="-1" aria-labelledby="addScheduleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+<!-- Модальные окна для создания и редакирования расписания -->
+<div class="modal fade" id="scheduleSettingsModal" tabindex="-1" aria-labelledby="scheduleSettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <!-- Контент модального окна для добавления расписания -->
-            <!-- Здесь разместим форму добавления расписания и выбор специалистов -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="scheduleSettingsModalLabel">Настройка Расписания</h5>
+                <button type="button" class="btn-close" id="closeScheduleSettingsBtn" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="schedule-table-container">
+                <div class="mb-3">
+                    <label for="scheduleName" class="form-label">Название Расписания</label>
+                    <input type="text" class="form-control" id="scheduleName" placeholder="Введите название расписания">
+                </div>
+                <div class="slider-container">
+                    <input id="timeRangeSlider" type="text" value="" class="slider form-control" 
+                           data-slider-min="0" 
+                           data-slider-max="1439" 
+                           data-slider-step="30" 
+                           data-slider-value="[540, 1140]" 
+                           data-slider-orientation="horizontal" 
+                           data-slider-selection="before" 
+                           data-slider-tooltip="show">
+                </div>
+                <p>Time Range: <span id="sliderRangeLabel">08:00 - 20:00</span></p>
+                
+                <table id="schedule-table" class="table table-bordered">
+                    <thead>
+                        <tr id="time-header">
+                            <!-- Временные слоты будут добавлены здесь через скрипт -->
+                        </tr>
+                    </thead>
+                    <tbody id="schedule-body">
+                        <tr><td>Понедельник</td></tr>
+                        <tr><td>Вторник</td></tr>
+                        <tr><td>Среда</td></tr>
+                        <tr><td>Четверг</td></tr>
+                        <tr><td>Пятница</td></tr>
+                        <tr><td>Суббота</td></tr>
+                        <tr><td>Воскресенье</td></tr>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="saveScheduleBtn">Сохранить Расписание</button>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Модальные окна для редактирования и удаления расписаний -->
-{% for schedule in schedules %}
-<div class="modal fade" id="editScheduleModal{{ schedule.id }}" tabindex="-1" aria-labelledby="editScheduleModalLabel{{ schedule.id }}" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <!-- Контент модального окна для редактирования расписания -->
-        </div>
-    </div>
-</div>
 
-<div class="modal fade" id="deleteScheduleModal{{ schedule.id }}" tabindex="-1" aria-labelledby="deleteScheduleModalLabel{{ schedule.id }}" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <!-- Контент модального окна для удаления расписания -->
-        </div>
-    </div>
-</div>
-{% endfor %}
+
+
+<!-- Подключение внешнего скрипта -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="{% static 'js/setup_shedule.js' %}"></script>
+<script src="{% static 'bootstrap-slider/bootstrap-slider.min.js' %}"></script>
 
 {% endblock %}
+

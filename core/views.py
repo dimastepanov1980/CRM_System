@@ -478,7 +478,27 @@ def remove_event_view(request):
 # -----------------------------------------------------
 # ------------- < Schedule  > -----------------
 
-
+@login_required
+def get_schedule_by_id(request, schedule_id):
+    logger.debug(f"Fetching details for schedule with ID: {schedule_id}")
+    try:
+        schedule = WorkSchedule.objects.get(id=schedule_id)
+        schedule_data = {
+            'id': schedule.id,
+            'name': schedule.name,
+            'slots': [
+                {
+                    'day_of_week': entry.day_of_week,
+                    'start_time': entry.start_time.strftime('%H:%M'),
+                    'end_time': entry.end_time.strftime('%H:%M')
+                }
+                for entry in schedule.schedule_entries.all()
+            ]
+        }
+        logger.debug(f"Schedule Data: {json.dumps(schedule_data, indent=2)}")
+        return JsonResponse(schedule_data)
+    except WorkSchedule.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Schedule not found'}, status=404)
     
 @login_required
 def get_schedule(request, specialist_uuid):
@@ -589,7 +609,7 @@ def save_schedule(request):
 
 @login_required
 @csrf_exempt
-@transaction.atomic  # Используем транзакцию для обеспечения целостности данных
+@transaction.atomic
 def apply_schedule(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -628,7 +648,53 @@ def apply_schedule(request):
 
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
+@login_required
+def get_specialists_for_assignment(request):
+    try:
+        company = Company.objects.get(owner=request.user)
+        specialists = Specialist.objects.filter(company=company)
+        
+        specialists_data = []
+        for specialist in specialists:
+            schedules = specialist.schedules.all()  # Получаем все расписания, связанные с этим специалистом
+            current_schedules = [{'id': schedule.id, 'name': schedule.name} for schedule in schedules]  # Возвращаем список объектов с ID и именем расписаний
+            specialists_data.append({
+                'uuid': str(specialist.uuid),
+                'name': specialist.name,
+                'current_schedules': current_schedules  # Возвращаем список объектов, связанных с этим специалистом
+            })
 
+        return JsonResponse({'specialists': specialists_data})
+    except Company.DoesNotExist:
+        return JsonResponse({'error': 'Company not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+@login_required
+@csrf_exempt
+def assign_specialists_to_schedule(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        schedule_id = data.get('schedule_id')
+        specialist_ids = data.get('specialist_ids', [])
+
+        try:
+            schedule = WorkSchedule.objects.get(id=schedule_id)
+            specialists = Specialist.objects.filter(uuid__in=specialist_ids)
+
+            for specialist in specialists:
+                schedule.specialists.add(specialist)
+            
+            return JsonResponse({'success': True})
+        except WorkSchedule.DoesNotExist:
+            return JsonResponse({'error': 'Schedule not found'}, status=404)
+        except Specialist.DoesNotExist:
+            return JsonResponse({'error': 'Specialist not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
 # Кажется это не нужно, можно удалить  !
 #\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 def specialist_schedule_view(request, uuid):

@@ -6,6 +6,9 @@
 
 <!-- Кнопка для добавления нового расписания -->
 <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#scheduleSettingsModal">Добавить Расписание</button>
+<!-- Кнопка для добавления сотрудников к расписанию -->
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSpecialistsModal">Add Specialists</button>
+
 
 <!-- Таблица с текущими расписаниями -->
 <table class="table mt-3">
@@ -16,12 +19,12 @@
             <th>Schedule Entries</th>
         </tr>
     </thead>
-    <tbody id="scheduleTableBody">
+   <tbody id="scheduleTableBody">
         <!-- Данные будут загружены динамически с помощью JavaScript -->
     </tbody>
 </table>
 
-<!-- Модальные окна для создания и редакирования расписания -->
+<!-- Модальное окно для создания и редактирования расписания -->
 <div class="modal fade" id="scheduleSettingsModal" tabindex="-1" aria-labelledby="scheduleSettingsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -30,6 +33,7 @@
                 <button type="button" class="btn-close" id="closeScheduleSettingsBtn" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <input type="hidden" id="scheduleId"> <!-- Скрытое поле для хранения идентификатора расписания -->
                 <div id="schedule-table-container">
                 <div class="mb-3">
                     <label for="scheduleName" class="form-label">Название Расписания</label>
@@ -54,13 +58,13 @@
                         </tr>
                     </thead>
                     <tbody id="schedule-body">
-                        <tr><td>Понедельник</td></tr>
-                        <tr><td>Вторник</td></tr>
-                        <tr><td>Среда</td></tr>
-                        <tr><td>Четверг</td></tr>
-                        <tr><td>Пятница</td></tr>
-                        <tr><td>Суббота</td></tr>
-                        <tr><td>Воскресенье</td></tr>
+                        <tr><td>Mon.</td></tr>
+                        <tr><td>Tue.</td></tr>
+                        <tr><td>Wed.</td></tr>
+                        <tr><td>Thu.</td></tr>
+                        <tr><td>Fri.</td></tr>
+                        <tr><td>Sat.</td></tr>
+                        <tr><td>Sun.</td></tr>
                     </tbody>
                 </table>
                 </div>
@@ -72,8 +76,35 @@
     </div>
 </div>
 
-
-
+<!-- Модальное окно для добавления сотрудников -->
+<div class="modal fade" id="addSpecialistsModal" tabindex="-1" aria-labelledby="addSpecialistsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSpecialistsModalLabel">Assign Specialists to Schedule</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="selectSchedule" class="form-label">Select Schedule</label>
+                    <select id="selectSchedule" class="form-control">
+                        <option value="" disabled selected>-Select a schedule</option>
+                        <!-- Сюда будут загружены опции расписаний -->
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="selectSpecialists" class="form-label">Select Specialists</label>
+                    <div id="specialistsList" class="list-group">
+                        <!-- Список сотрудников будет загружен сюда -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="assignSpecialistsBtn" disabled>Assign Selected Specialists</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Подключение внешнего скрипта -->
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

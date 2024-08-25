@@ -3,12 +3,24 @@ document.addEventListener('DOMContentLoaded', function () {
         scheduleBody: document.getElementById('schedule-body'),
         timeHeader: document.getElementById('time-header'),
         sliderRangeLabel: document.getElementById('sliderRangeLabel'),
+        scheduleIdInput: document.getElementById('scheduleId'), // Поле для хранения ID расписания
+        scheduleNameInput: document.getElementById('scheduleName'),
+        scheduleModal: document.getElementById('scheduleSettingsModal'),
+
+        saveScheduleBtn: document.getElementById('saveScheduleBtn'),
+        closeScheduleSettingsBtn: document.getElementById('closeScheduleSettingsBtn'),
+        applyScheduleBtn: document.getElementById('applyScheduleBtn'),
+        addSpecialistsModal: document.getElementById('addSpecialistsModal'),
+        assignSpecialistsBtn: document.getElementById('assignSpecialistsBtn'),
+        saveSpecialistsBtn: document.getElementById('saveSpecialistsBtn'),
+        selectSchedule: document.getElementById('selectSchedule'),
+        specialistsList: document.getElementById('specialistsList')
     };
     
     const config = {
         intervalMinutes: 30,
         defaultStartHour: 9 * 60, // 9:00 AM in minutes
-        defaultEndHour: 20 * 60, // 7:00 PM in minutes,
+        defaultEndHour: 20 * 60, // 7:00 PM in minutes
     };
 
     const state = {
@@ -20,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Обработчик события для снятия состояния нажатия мыши
     document.addEventListener('mouseup', () => state.isMouseDown = false);
-
 
     // Инициализация временных слотов по умолчанию
     updateTimeSlots(config.defaultStartHour, config.defaultEndHour);
@@ -133,7 +144,6 @@ document.addEventListener('DOMContentLoaded', function () {
         cell.classList.toggle('selected', !deselecting);
     }
 
-    // Обнов
     function updateSchedules() {
         const dayNames = {
             1: 'Mon.',
@@ -148,7 +158,6 @@ document.addEventListener('DOMContentLoaded', function () {
         fetch('/get_schedules/')
             .then(response => response.json())
             .then(data => {
-                // Обновление select
                 const scheduleSelect = document.getElementById('scheduleSelect');
                 if (scheduleSelect) {
                     scheduleSelect.innerHTML = ''; // Очистка существующих опций
@@ -197,24 +206,48 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                         row.appendChild(entriesCell);
     
-                        // Создаем ячейки с кнопками для редактирования и удаления
+                        // Создаем ячейку с иконкой и выпадающим меню
                         const actionsCell = document.createElement('td');
-                        const editButton = document.createElement('button');
-                        editButton.classList.add('btn', 'btn-warning');
-                        editButton.setAttribute('data-bs-toggle', 'modal');
-                        editButton.setAttribute('data-bs-target', `#editScheduleModal${schedule.id}`);
-                        editButton.textContent = 'Редактировать';
-                        actionsCell.appendChild(editButton);
+                        const dropdownDiv = document.createElement('div');
+                        dropdownDiv.classList.add('dropdown');
     
-                        const deleteButton = document.createElement('button');
-                        deleteButton.classList.add('btn', 'btn-danger');
-                        deleteButton.setAttribute('data-bs-toggle', 'modal');
-                        deleteButton.setAttribute('data-bs-target', `#deleteScheduleModal${schedule.id}`);
-                        deleteButton.textContent = 'Удалить';
-                        actionsCell.appendChild(deleteButton);
+                        const dropdownButton = document.createElement('button');
+                        dropdownButton.classList.add('btn', 'dropdown-toggle');
+                        dropdownButton.setAttribute('id', `dropdownMenuButton${schedule.id}`);
+                        dropdownButton.setAttribute('data-bs-toggle', 'dropdown');
+                        dropdownButton.setAttribute('aria-expanded', 'false');
+                        dropdownButton.textContent = '...';
+    
+                        const dropdownMenu = document.createElement('ul');
+                        dropdownMenu.classList.add('dropdown-menu');
+                        dropdownMenu.setAttribute('aria-labelledby', `dropdownMenuButton${schedule.id}`);
+    
+                        const editMenuItem = document.createElement('li');
+                        const editLink = document.createElement('a');
+                        editLink.classList.add('dropdown-item');
+                        editLink.setAttribute('href', '#'); // href не нужен для кнопок, открывающих модальные окна
+                        editLink.setAttribute('data-bs-toggle', 'modal');
+                        editLink.setAttribute('data-bs-target', '#scheduleSettingsModal'); // Ссылка на единое модальное окно
+                        editLink.setAttribute('data-schedule-id', schedule.id); // Передача ID расписания
+                        editLink.textContent = 'Редактировать';
+                        editMenuItem.appendChild(editLink);
+    
+                        const deleteMenuItem = document.createElement('li');
+                        const deleteLink = document.createElement('a');
+                        deleteLink.classList.add('dropdown-item');
+                        deleteLink.setAttribute('href', `#deleteScheduleModal${schedule.id}`);
+                        deleteLink.setAttribute('data-bs-toggle', 'modal');
+                        deleteLink.textContent = 'Delete';
+                        deleteMenuItem.appendChild(deleteLink);
+    
+                        dropdownMenu.appendChild(editMenuItem);
+                        dropdownMenu.appendChild(deleteMenuItem);
+    
+                        dropdownDiv.appendChild(dropdownButton);
+                        dropdownDiv.appendChild(dropdownMenu);
+                        actionsCell.appendChild(dropdownDiv);
     
                         row.appendChild(actionsCell);
-    
                         tableBody.appendChild(row);
                     });
                 }
@@ -223,14 +256,92 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error('Error fetching schedules:', error);
             });
     }
+
+    function parseTimeToMinutes(timeStr) {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes;
+    }
+
+    function updateTimeSlotsWithData(slots) {
+        // Очищаем текущие выделенные ячейки
+        state.selectedCells.clear();
     
-    // Save schedule handler
-    const saveScheduleBtn = document.getElementById('saveScheduleBtn');
-    if (saveScheduleBtn) {
-        saveScheduleBtn.addEventListener('click', function () {
+        // Снимаем выделение с всех ячеек
+        elements.scheduleBody.querySelectorAll('.time-slot.selected').forEach(cell => {
+            cell.classList.remove('selected');
+        });
+        
+        // Проходим по всем ячейкам и выделяем те, которые соответствуют слоту
+        elements.scheduleBody.querySelectorAll('.time-slot').forEach(cell => {
+            const [dayName, time] = cell.dataset.time.split('-');
+            const dayOfWeek = getDayOfWeekNumber(dayName);
+            const cellTime = parseInt(cell.dataset.minutes); // Используем время в минутах
+        
+            // Проходим по каждому слоту
+            slots.forEach(slot => {
+                const startTimeInMinutes = parseTimeToMinutes(slot.start_time);
+                const endTimeInMinutes = parseTimeToMinutes(slot.end_time);
+        
+                // Проверяем, попадает ли время ячейки в интервал времени слота
+                if (dayOfWeek === slot.day_of_week && cellTime >= startTimeInMinutes && cellTime < endTimeInMinutes) {
+                    cell.classList.add('selected');
+                    state.selectedCells.add(cell.dataset.time);
+                }
+            });
+        });
+    }
+    
+    // Функция для преобразования названия дня недели в номер
+    function getDayOfWeekNumber(dayName) {
+        const dayNames = {
+            'Mon.': 1,
+            'Tue.': 2,
+            'Wed.': 3,
+            'Thu.': 4,
+            'Fri.': 5,
+            'Sat.': 6,
+            'Sun.': 7
+        };
+        return dayNames[dayName] || null;
+    }
+    
+    elements.scheduleModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const scheduleId = button.getAttribute('data-schedule-id');
+    
+        if (scheduleId) {
+            fetch(`/get_schedule_by_id/${scheduleId}/`)
+                .then(response => {
+                    if (!response.ok) {
+                        console.error(`Server returned ${response.status} for ${response.url}`);
+                        return response.text();
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (typeof data === 'string') {
+                        console.error('Received HTML instead of JSON:', data);
+                    } else {
+                        elements.scheduleIdInput.value = data.id;
+                        elements.scheduleNameInput.value = data.name;
+                        console.log('get data slots:', data.slots);
+
+                        updateTimeSlotsWithData(data.slots);
+                    }
+                })
+                .catch(error => console.error('Error fetching schedule:', error));
+        } else {
+            elements.scheduleIdInput.value = '';
+            elements.scheduleNameInput.value = '';
+            updateTimeSlots(config.defaultStartHour, config.defaultEndHour);
+        }
+    });
+    
+    if (elements.saveScheduleBtn) {
+        elements.saveScheduleBtn.addEventListener('click', function () {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const scheduleId = elements.scheduleIdInput.value;  // Проверяем, существует ли идентификатор расписания
             const scheduleName = document.getElementById('scheduleName').value;
-            const selectedSlots = [];
             const scheduleModal = document.getElementById('scheduleSettingsModal');
             const scheduleModalElement = document.getElementById('scheduleModal');
             let scheduleModal1;
@@ -269,9 +380,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     scheduleModal1.show();
                 }
             }
+            const url = scheduleId ? `/update_schedule/${scheduleId}/` : '/save_schedule/';
+            const method = scheduleId ? 'PUT' : 'POST';
 
-            fetch('/save_schedule/', {
-                method: 'POST',
+            fetch(url, {
+                method: method ,
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken
@@ -307,10 +420,9 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
-
-    const closeScheduleSettingsBtn = document.getElementById('closeScheduleSettingsBtn');
-    if (closeScheduleSettingsBtn) {
-        closeScheduleSettingsBtn.addEventListener('click', function () {
+    
+    if (elements.closeScheduleSettingsBtn) {
+        elements.closeScheduleSettingsBtn.addEventListener('click', function () {
             const scheduleSettingsModal = document.getElementById('scheduleSettingsModal');
             const modalInstance = bootstrap.Modal.getInstance(scheduleSettingsModal);
 
@@ -327,10 +439,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-
-    const applyScheduleBtn = document.getElementById('applyScheduleBtn');
-    if (applyScheduleBtn) {
-        applyScheduleBtn.addEventListener('click', function () {
+    
+    if (elements.applyScheduleBtn) {
+        elements.applyScheduleBtn.addEventListener('click', function () {
             const scheduleSelect = document.getElementById('scheduleSelect');
             const selectedScheduleId = scheduleSelect.value;
             const specialistId = document.getElementById('specialist-uuid').value;
@@ -377,6 +488,124 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error('Error applying schedule:', error);
                 alert('Error applying schedule.');
             });
+        });
+    }
+    
+    if (elements.addSpecialistsModal) {
+        elements.addSpecialistsModal.addEventListener('show.bs.modal', function () {
+            // Загружаем расписания при открытии модального окна
+            elements.specialistsList.innerHTML = '';
+            fetch('/get_schedules/')
+                .then(response => response.json())
+                .then(data => {
+                    elements.selectSchedule.innerHTML = '<option value="" disabled selected>Select a schedule</option>';
+                    data.schedules.forEach(schedule => {
+                        const option = document.createElement('option');
+                        option.value = schedule.id;
+                        option.textContent = schedule.name;
+                        elements.selectSchedule.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching schedules:', error));
+        });
+    
+        // Обработка выбора расписания
+        if (elements.selectSchedule) {
+            elements.selectSchedule.addEventListener('change', function () {
+                const scheduleId = parseInt(elements.selectSchedule.value);
+                console.log('Selected Schedule ID:', scheduleId);
+    
+                // Сбрасываем список специалистов при изменении расписания
+                elements.specialistsList.innerHTML = '';
+    
+                fetch('/get_specialists_for_assignment/')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            console.error('Error fetching specialists:', data.error);
+                        } else {
+                            data.specialists.forEach(specialist => {
+                                console.log('Specialist:', specialist.name);
+                                console.log('Current Schedules:', specialist.current_schedules);
+    
+                                const listItem = document.createElement('li');
+                                listItem.classList.add('list-group-item');
+    
+                                const checkbox = document.createElement('input');
+                                checkbox.type = 'checkbox';
+                                checkbox.value = specialist.uuid;
+    
+                                // Проверяем, применено ли текущее расписание к специалисту
+                                const isCurrentScheduleAssigned = specialist.current_schedules.some(schedule => schedule.id === scheduleId);
+                                console.log(`Is Current Schedule Assigned to ${specialist.name}:`, isCurrentScheduleAssigned);
+    
+                                if (isCurrentScheduleAssigned) {
+                                    checkbox.checked = true; // Устанавливаем метку выбора
+                                    checkbox.disabled = false; // Снимаем блокировку
+                                } else if (specialist.current_schedules.length > 0) {
+                                    checkbox.disabled = true; // Блокируем выбор, если у специалиста уже есть другое расписание
+                                }
+    
+                                const label = document.createElement('label');
+                                label.textContent = specialist.name + (specialist.current_schedules.length > 0 ? ` (Current: ${specialist.current_schedules.map(s => s.name).join(', ')})` : '');
+    
+                                listItem.appendChild(checkbox);
+                                listItem.appendChild(label);
+                                elements.specialistsList.appendChild(listItem);
+                            });
+    
+                            // Активируем кнопку назначения специалистов, если есть выбранное расписание
+                            elements.assignSpecialistsBtn.disabled = false;
+                        }
+                    })
+                    .catch(error => console.error('Error fetching specialists:', error));
+            });
+        }
+    }
+    
+    if (elements.assignSpecialistsBtn) {
+        elements.assignSpecialistsBtn.addEventListener('click', function () {
+            if (elements.specialistsList) {
+                const selectedSpecialists = Array.from(elements.specialistsList.querySelectorAll('input[type="checkbox"]:checked'))
+                    .map(checkbox => checkbox.value);
+                const scheduleId = parseInt(elements.selectSchedule.value);
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                fetch('/assign_specialists_to_schedule/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        schedule_id: scheduleId,
+                        specialist_ids: selectedSpecialists
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Specialists successfully assigned to the schedule!');
+                        
+                        // Закрытие модального окна
+                        const addSpecialistsModal = bootstrap.Modal.getInstance(elements.addSpecialistsModal);
+                        if (addSpecialistsModal) {
+                            addSpecialistsModal.hide();
+                        }
+
+                        // Обновление UI
+                        updateSchedules();
+                    } else {
+                        alert(`Error assigning specialists: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error assigning specialists:', error);
+                    alert('Error assigning specialists.');
+                });
+            } else {
+                console.error('The specialists list element was not found.');
+            }
         });
     }
 

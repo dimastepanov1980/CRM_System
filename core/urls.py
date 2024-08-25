@@ -1,6 +1,6 @@
 from django.urls import path
 from django.conf.urls import handler404, handler400
-from .views import schedule_setup_view, get_schedules, schedule_list_view, get_schedule, apply_schedule, save_schedule, admin_dashboard_view, specialist_list_view, get_specialist_events, available_services_view, get_category_view, edit_category_view, delete_service_category_view, add_event_view, services_list_view, add_service_view, edit_service_view, delete_service_view, add_service_category_view, update_event_view, remove_event_view, specialist_detail_view, specialist_add_view, specialist_edit_view, specialist_delete_view, login_view, register, bot_list_view, logout_view, custom_404_view, custom_400_view, home, BotCreateView, BotUpdateView, BotDetailView, message_list_view, user_list_view, webhook, AdminCreateView, AdminListView, AdminUpdateView
+from .views import schedule_setup_view, get_schedules, get_schedule_by_id, get_specialists_for_assignment, assign_specialists_to_schedule, schedule_list_view, get_schedule, apply_schedule, save_schedule, admin_dashboard_view, specialist_list_view, get_specialist_events, available_services_view, get_category_view, edit_category_view, delete_service_category_view, add_event_view, services_list_view, add_service_view, edit_service_view, delete_service_view, add_service_category_view, update_event_view, remove_event_view, specialist_detail_view, specialist_add_view, specialist_edit_view, specialist_delete_view, login_view, register, bot_list_view, logout_view, custom_404_view, custom_400_view, home, BotCreateView, BotUpdateView, BotDetailView, message_list_view, user_list_view, webhook, AdminCreateView, AdminListView, AdminUpdateView
 
 
 urlpatterns = [
@@ -37,9 +37,13 @@ urlpatterns = [
     path('schedule-setup/', schedule_setup_view, name='schedule_setup'),
     path('save_schedule/', save_schedule, name='save_schedule'),
     path('get_schedules/', get_schedules, name='get_schedules'),
+    path('get_schedule_by_id/<int:schedule_id>/', get_schedule_by_id, name='get_schedule_by_id'),
     path('specialist/<uuid:uuid>/schedule/', get_schedule, name='get_schedule'),
     path('apply_schedule/', apply_schedule, name='apply_schedule'),
     path('schedule_list/', schedule_list_view, name='schedule_list'),
+    path('get_specialists_for_assignment/', get_specialists_for_assignment, name='get_specialists_for_assignment'),
+    path('assign_specialists_to_schedule/', assign_specialists_to_schedule, name='assign_specialists_to_schedule'),
+
 
     
     path('bots/', bot_list_view, name='bot_list'),

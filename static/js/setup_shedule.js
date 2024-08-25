@@ -352,68 +352,105 @@ document.addEventListener('DOMContentLoaded', function () {
             const scheduleModal = document.getElementById('scheduleSettingsModal');
             const scheduleModalElement = document.getElementById('scheduleModal');
             let scheduleModal1;
-
+    
             if (scheduleModalElement) {
                 scheduleModal1 = new bootstrap.Modal(scheduleModalElement);
             }
-
+    
             const scheduleModalClsBtn = document.getElementById('btn-close');
             const modalInstance = bootstrap.Modal.getInstance(scheduleModal);
-            const rows = document.querySelectorAll('#schedule-body tr');
-
-            const slotsByDay = {};
-            const intervalMinutes = 30;
-
-            rows.forEach((row, dayIndex) => {
-                const day = dayIndex + 1;
-                row.querySelectorAll('.time-slot.selected').forEach(slot => {
-                    const timeInMinutes = parseInt(slot.dataset.minutes);
-                    if (!slotsByDay[day]) {
-                        slotsByDay[day] = { start: timeInMinutes, end: timeInMinutes };
-                    } else {
-                        slotsByDay[day].end = timeInMinutes;
-                    }
-                });
-            });
-
+    
             if (scheduleName.trim() === '') {
                 alert('Please enter a schedule name.');
                 return;
             }
-
-            if (scheduleModalClsBtn && modalInstance) {
-                modalInstance.hide();
-                if (scheduleModal1) {
-                    scheduleModal1.show();
+    
+            // Собираем данные временных интервалов для каждого дня недели
+            const slotsByDay = {};
+            const rows = document.querySelectorAll('#schedule-body tr');
+            
+            rows.forEach((row, dayIndex) => {
+                const day = dayIndex + 1;
+                let currentSlot = null;
+    
+                row.querySelectorAll('.time-slot.selected').forEach(slot => {
+                    const timeInMinutes = parseInt(slot.dataset.minutes);
+    
+                    if (!currentSlot) {
+                        // Создаем новый слот
+                        currentSlot = {
+                            start: timeInMinutes,
+                            end: timeInMinutes + config.intervalMinutes
+                        };
+                    } else {
+                        // Проверяем, что текущий слот не прерывается
+                        if (timeInMinutes === currentSlot.end) {
+                            currentSlot.end = timeInMinutes + config.intervalMinutes;
+                        } else {
+                            // Сохраняем завершенный слот
+                            if (!slotsByDay[day]) {
+                                slotsByDay[day] = [];
+                            }
+                            slotsByDay[day].push(currentSlot);
+                            // Начинаем новый слот
+                            currentSlot = {
+                                start: timeInMinutes,
+                                end: timeInMinutes + config.intervalMinutes
+                            };
+                        }
+                    }
+                });
+    
+                // Сохраняем последний слот для данного дня
+                if (currentSlot) {
+                    if (!slotsByDay[day]) {
+                        slotsByDay[day] = [];
+                    }
+                    slotsByDay[day].push(currentSlot);
                 }
+            });
+    
+            // Формируем массив слотов для отправки на сервер
+            const slots = [];
+            for (const [day, intervals] of Object.entries(slotsByDay)) {
+                intervals.forEach(interval => {
+                    slots.push({
+                        dow: [parseInt(day)],
+                        start: formatTime(interval.start),
+                        end: formatTime(interval.end)
+                    });
+                });
             }
+    
+            const payload = {
+                name: scheduleName,
+                slots: slots
+            };
+    
+            // Выводим данные в консоль перед отправкой на сервер
+            console.log('Data to be sent to server:', JSON.stringify(payload, null, 2));
+    
+            // URL и метод запроса зависят от того, создаем мы новое расписание или обновляем существующее
             const url = scheduleId ? `/update_schedule/${scheduleId}/` : '/save_schedule/';
             const method = scheduleId ? 'PUT' : 'POST';
-
+    
             fetch(url, {
-                method: method ,
+                method: method,
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken
                 },
-                body: JSON.stringify({
-                    name: scheduleName,
-                    slots: Object.keys(slotsByDay).map(day => ({
-                        dow: [parseInt(day)],
-                        start: formatTime(slotsByDay[day].start),
-                        end: formatTime(slotsByDay[day].end + intervalMinutes)
-                    }))
-                })
+                body: JSON.stringify(payload)
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     alert('Schedule saved successfully!');
                     modalInstance.hide();  // Закрытие второго модального окна
-            
+                
                     // Обновляем select и таблицу
                     updateSchedules();
-            
+                
                     // Открываем первое модальное окно (если требуется)
                     if (scheduleModal1) {
                         scheduleModal1.show();

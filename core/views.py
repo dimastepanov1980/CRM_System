@@ -565,7 +565,6 @@ def schedule_list_view(request):
     }
     return render(request, 'core/schedule_list.html', context)
 
-
 @csrf_exempt
 def save_schedule(request):
     if request.method == 'POST':
@@ -694,7 +693,116 @@ def assign_specialists_to_schedule(request):
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=405)
-    
+
+@login_required
+@csrf_exempt
+def remove_specialists_from_schedule(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        schedule_id = data.get('schedule_id')
+        specialist_ids = data.get('specialist_ids', [])
+
+        try:
+            schedule = WorkSchedule.objects.get(id=schedule_id)
+            specialists = Specialist.objects.filter(uuid__in=specialist_ids)
+
+            for specialist in specialists:
+                schedule.specialists.remove(specialist)
+            
+            return JsonResponse({'success': True})
+        except WorkSchedule.DoesNotExist:
+            return JsonResponse({'error': 'Schedule not found'}, status=404)
+        except Specialist.DoesNotExist:
+            return JsonResponse({'error': 'Specialist not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@login_required
+def get_schedule_specialists(request, schedule_id):
+    try:
+        schedule = WorkSchedule.objects.get(id=schedule_id)
+        specialists = schedule.specialists.all()
+
+        specialists_data = [{'uuid': str(specialist.uuid), 'name': specialist.name} for specialist in specialists]
+
+        return JsonResponse({'specialists': specialists_data})
+    except WorkSchedule.DoesNotExist:
+        return JsonResponse({'error': 'Schedule not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+@csrf_exempt
+def delete_schedule(request, schedule_id):
+    if request.method == 'POST':
+        try:
+            schedule = WorkSchedule.objects.get(id=schedule_id)
+
+            # Убираем связь специалистов с этим расписанием
+            schedule.specialists.clear()
+
+            # Удаляем расписание
+            schedule.delete()
+
+            return JsonResponse({'success': True})
+        except WorkSchedule.DoesNotExist:
+            return JsonResponse({'error': 'Schedule not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def update_schedule(request, schedule_id):
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        
+        # Выводим полученные данные в лог для отладки
+        logger.debug(f"Received JSON data for update: {json.dumps(data, indent=2)}")
+        
+        name = data.get('name')
+        slots = data.get('slots', [])
+        user = request.user
+
+        if not name or not slots:
+            return JsonResponse({'success': False, 'error': 'Invalid data provided.'})
+
+        try:
+            company = Company.objects.get(owner=user)
+            work_schedule = WorkSchedule.objects.get(id=schedule_id, company=company)
+        except (Company.DoesNotExist, WorkSchedule.DoesNotExist):
+            return JsonResponse({'success': False, 'error': 'Schedule or company not found.'})
+
+        # Обновляем имя расписания
+        work_schedule.name = name
+        work_schedule.save()
+
+        # Удаляем старые записи расписания и добавляем новые
+        work_schedule.schedule_entries.clear()
+
+        for slot in slots:
+            try:
+                dows = slot['dow']
+                start_time = slot['start']
+                end_time = slot['end']
+
+                for day in dows:
+                    entry = ScheduleEntry.objects.create(
+                        day_of_week=day,
+                        start_time=start_time,
+                        end_time=end_time
+                    )
+                    work_schedule.schedule_entries.add(entry)
+            except (KeyError, ValueError) as e:
+                logger.error(f"Invalid slot data: {json.dumps(slot, indent=2)} - Error: {e}")
+                return JsonResponse({'success': False, 'error': 'Invalid slot data provided.'})
+
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+            
 # Кажется это не нужно, можно удалить  !
 #\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 def specialist_schedule_view(request, uuid):

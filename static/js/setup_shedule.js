@@ -14,7 +14,11 @@ document.addEventListener('DOMContentLoaded', function () {
         assignSpecialistsBtn: document.getElementById('assignSpecialistsBtn'),
         saveSpecialistsBtn: document.getElementById('saveSpecialistsBtn'),
         selectSchedule: document.getElementById('selectSchedule'),
-        specialistsList: document.getElementById('specialistsList')
+        specialistsList: document.getElementById('specialistsList'),
+
+        deleteScheduleModal: document.getElementById('deleteScheduleModal'),
+        deleteScheduleWarning: document.getElementById('deleteScheduleWarning'),
+        confirmDeleteScheduleBtn: document.getElementById('confirmDeleteScheduleBtn'),
     };
     
     const config = {
@@ -144,6 +148,7 @@ document.addEventListener('DOMContentLoaded', function () {
         cell.classList.toggle('selected', !deselecting);
     }
 
+    // Прорисовка таблицы
     function updateSchedules() {
         const dayNames = {
             1: 'Mon.',
@@ -229,14 +234,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         editLink.setAttribute('data-bs-toggle', 'modal');
                         editLink.setAttribute('data-bs-target', '#scheduleSettingsModal'); // Ссылка на единое модальное окно
                         editLink.setAttribute('data-schedule-id', schedule.id); // Передача ID расписания
-                        editLink.textContent = 'Редактировать';
+                        editLink.textContent = 'Edit';
                         editMenuItem.appendChild(editLink);
     
                         const deleteMenuItem = document.createElement('li');
                         const deleteLink = document.createElement('a');
                         deleteLink.classList.add('dropdown-item');
-                        deleteLink.setAttribute('href', `#deleteScheduleModal${schedule.id}`);
+                        deleteLink.setAttribute('href', '#'); // href не нужен для кнопок, открывающих модальные окна
                         deleteLink.setAttribute('data-bs-toggle', 'modal');
+                        deleteLink.setAttribute('data-bs-target', '#deleteScheduleModal');
+                        deleteLink.setAttribute('data-schedule-id', schedule.id); // Передача ID расписания
                         deleteLink.textContent = 'Delete';
                         deleteMenuItem.appendChild(deleteLink);
     
@@ -565,12 +572,20 @@ document.addEventListener('DOMContentLoaded', function () {
     
     if (elements.assignSpecialistsBtn) {
         elements.assignSpecialistsBtn.addEventListener('click', function () {
-            if (elements.specialistsList) {
-                const selectedSpecialists = Array.from(elements.specialistsList.querySelectorAll('input[type="checkbox"]:checked'))
-                    .map(checkbox => checkbox.value);
-                const scheduleId = parseInt(elements.selectSchedule.value);
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
+            const selectedSpecialists = Array.from(elements.specialistsList.querySelectorAll('input[type="checkbox"]'))
+                .map(checkbox => ({
+                    uuid: checkbox.value,
+                    checked: checkbox.checked
+                }));
+    
+            const scheduleId = elements.selectSchedule.value;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+            const specialistsToAdd = selectedSpecialists.filter(s => s.checked).map(s => s.uuid);
+            const specialistsToRemove = selectedSpecialists.filter(s => !s.checked).map(s => s.uuid);
+    
+            // Добавление специалистов к расписанию
+            if (specialistsToAdd.length > 0) {
                 fetch('/assign_specialists_to_schedule/', {
                     method: 'POST',
                     headers: {
@@ -579,23 +594,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     body: JSON.stringify({
                         schedule_id: scheduleId,
-                        specialist_ids: selectedSpecialists
+                        specialist_ids: specialistsToAdd
                     })
                 })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success) {
-                        alert('Specialists successfully assigned to the schedule!');
-                        
-                        // Закрытие модального окна
-                        const addSpecialistsModal = bootstrap.Modal.getInstance(elements.addSpecialistsModal);
-                        if (addSpecialistsModal) {
-                            addSpecialistsModal.hide();
-                        }
-
-                        // Обновление UI
-                        updateSchedules();
-                    } else {
+                    updateSchedules();
+                    if (!data.success) {
                         alert(`Error assigning specialists: ${data.error}`);
                     }
                 })
@@ -603,10 +608,114 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.error('Error assigning specialists:', error);
                     alert('Error assigning specialists.');
                 });
-            } else {
-                console.error('The specialists list element was not found.');
+            }
+    
+            // Удаление специалистов из расписания
+            if (specialistsToRemove.length > 0) {
+                fetch('/remove_specialists_from_schedule/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        schedule_id: scheduleId,
+                        specialist_ids: specialistsToRemove
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    updateSchedules();
+                    if (!data.success) {
+                        alert(`Error removing specialists: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error removing specialists:', error);
+                    alert('Error removing specialists.');
+                });
+            }
+    
+            // Закрытие модального окна и обновление UI
+            if (specialistsToAdd.length > 0 || specialistsToRemove.length > 0) {
+                const addSpecialistsModal = bootstrap.Modal.getInstance(elements.addSpecialistsModal);
+                addSpecialistsModal.hide();
+                updateSchedules();
             }
         });
     }
 
+    // Открытие модального окна для удаления расписания
+    if (elements.deleteScheduleModal) {
+        elements.deleteScheduleModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Кнопка, вызвавшая модальное окно
+            const scheduleId = button.getAttribute('data-schedule-id'); // Получаем ID расписания из кнопки
+            console.log('Received schedule Id:', scheduleId);
+
+            if (scheduleId) {
+                fetch(`/get_schedule_specialists/${scheduleId}/`)
+                    .then(response => {
+                        if (!response.ok) {
+                            console.error(`Server returned ${response.status} for ${response.url}`);
+                            return response.text();
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (typeof data === 'string') {
+                            console.error('Received HTML instead of JSON:', data);
+                        } else {
+                            if (data.specialists.length > 0) {
+                                const specialistNames = data.specialists.map(specialist => specialist.name).join(', ');
+                                elements.deleteScheduleWarning.textContent = `The schedule is currently assigned to the following specialists: ${specialistNames}. They will lose this schedule. Do you want to proceed?`;
+                            } else {
+                                elements.deleteScheduleWarning.textContent = "Are you sure you want to delete this schedule?";
+                            }
+
+                            // Устанавливаем ID расписания для кнопки подтверждения удаления
+                            elements.confirmDeleteScheduleBtn.setAttribute('data-schedule-id', scheduleId);
+                        }
+                    })
+                    .catch(error => console.error('Error fetching schedule specialists:', error));
+            }
+        });
+    }
+
+    // Подтверждение удаления расписания
+    if (elements.confirmDeleteScheduleBtn) {
+        elements.confirmDeleteScheduleBtn.addEventListener('click', function () {
+            const scheduleId = this.getAttribute('data-schedule-id'); // Получаем ID расписания из кнопки
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            console.log('Delete schedule Id:', scheduleId);
+
+            if (scheduleId) {
+                fetch(`/delete_schedule/${scheduleId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const deleteScheduleModalInstance = bootstrap.Modal.getInstance(elements.deleteScheduleModal);
+                        if (deleteScheduleModalInstance) {
+                            deleteScheduleModalInstance.hide();
+                        }
+                        updateSchedules(); // Обновляем список расписаний
+                    } else {
+                        alert(`Error deleting schedule: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting schedule:', error);
+                    alert('Error deleting schedule.');
+                });
+            } else {
+                console.error('Schedule ID is null. Cannot delete schedule.');
+            }
+        });
+    }
+    
 });
